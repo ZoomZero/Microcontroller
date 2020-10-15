@@ -1,0 +1,900 @@
+                        .module main.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile main.c
+                        .area memory(abs)
+                        .org 0x68
+ 0068                   .dbfile main.c
+ 0068           _z::
+ 0068 00C0              .word -16384
+ 006A                   .dbfile D:\Тест2021\Отладчик\Loader\main.c
+ 006A                   .dbsym e z _z kI
+                        .area lit(rom, con, rel)
+ 0000           _LdL::
+ 0000 4C6F616465724C00  .byte 'L,'o,'a,'d,'e,'r,'L,0
+ 0008                   .dbsym e LdL _LdL A[8:8]kc
+ 0008           _LdH::
+ 0008 4C6F616465724800  .byte 'L,'o,'a,'d,'e,'r,'H,0
+ 0010                   .dbsym e LdH _LdH A[8:8]kc
+                        .area text(rom, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Loader\main.c
+ 0000                   .dbfunc e LoaderL _LoaderL fV
+                        .even
+ 0000           _LoaderL::
+ 0000                   .dbline -1
+ 0000                   .dbline 41
+ 0000           ; // Target : ATMega1284P
+ 0000           ; // Crystal: 24Mhz
+ 0000           ; 
+ 0000           ; #include <iom1284pv.h>
+ 0000           ; #include <macros.h>
+ 0000           ; 
+ 0000           ; #include "Uart0.h"
+ 0000           ; #include "Uart1.h"
+ 0000           ; #include "flash.h"
+ 0000           ; 
+ 0000           ; #define Uart0TxC (UCSR0A&0x40)
+ 0000           ; 
+ 0000           ; //#pragma global_register BufAdr:20
+ 0000           ; //int BufAdr;
+ 0000           ; 
+ 0000           ; #pragma global_register BufAdr:20
+ 0000           ; int BufAdr;
+ 0000           ; #pragma global_register Counter:21
+ 0000           ; unsigned char Counter;
+ 0000           ; #pragma global_register FlashPointer:22
+ 0000           ; const char *FlashPointer;
+ 0000           ; 
+ 0000           ; 
+ 0000           ; #pragma abs_address:0x68
+ 0000           ; const int z = 0xC000;
+ 0000           ; #pragma end_abs_address
+ 0000           ; 
+ 0000           ; char ServZone;
+ 0000           ; char SysNum;
+ 0000           ; 
+ 0000           ; /*asm(".area vector (abs)");
+ 0000           ; asm(".org 4");
+ 0000           ; asm("jmp _LoaderL");
+ 0000           ; asm("jmp _LoaderH");
+ 0000           ; asm(".area text");*/
+ 0000           ; 
+ 0000           ; const char LdL[] = "LoaderL";
+ 0000           ; const char LdH[] = "LoaderH";
+ 0000           ; 
+ 0000           ; void LoaderL(void)
+ 0000           ; {
+ 0000                   .dbline 42
+ 0000           ;  FlashToUart0(LdL);
+ 0000 00E0              ldi R16,<_LdL
+ 0002 10E0              ldi R17,>_LdL
+ 0004                   .dbline -2
+ 0004           L1:
+ 0004                   .dbline 0 ; func end
+ 0004 0C940000          xjmp _FlashToUart0
+ 0008                   .dbend
+ 0008                   .dbfunc e LoaderH _LoaderH fV
+                        .even
+ 0008           _LoaderH::
+ 0008                   .dbline -1
+ 0008                   .dbline 46
+ 0008           ; }
+ 0008           ; 
+ 0008           ; void LoaderH(void)
+ 0008           ; {
+ 0008                   .dbline 47
+ 0008           ;  FlashToUart0(LdH);
+ 0008 00E0              ldi R16,<_LdH
+ 000A 10E0              ldi R17,>_LdH
+ 000C                   .dbline -2
+ 000C           L2:
+ 000C                   .dbline 0 ; func end
+ 000C 0C940000          xjmp _FlashToUart0
+ 0010                   .dbend
+ 0010                   .dbfunc e WaitSpm _WaitSpm fV
+ 0010           ;        Command -> R16
+                        .even
+ 0010           _WaitSpm::
+ 0010                   .dbline -1
+ 0010                   .dbline 51
+ 0010           ; }
+ 0010           ; 
+ 0010           ; void WaitSpm(char Command)
+ 0010           ; {  
+ 0010 01C0              xjmp L5
+ 0012           L4:
+ 0012                   .dbline 52
+ 0012           ;    while(SPMCSR&1) WDR();
+ 0012 A895              wdr
+ 0014           L5:
+ 0014                   .dbline 52
+ 0014 27B6              in R2,0x37
+ 0016 20FC              sbrc R2,0
+ 0018 FCCF              rjmp L4
+ 001A           X0:
+ 001A                   .dbline 53
+ 001A           ;    SPMCSR=Command;
+ 001A 07BF              out 0x37,R16
+ 001C                   .dbline 54
+ 001C           ;    asm("spm");
+ 001C E895              spm
+ 001E                   .dbline -2
+ 001E           L3:
+ 001E                   .dbline 0 ; func end
+ 001E 0895              ret
+ 0020                   .dbsym r Command 16 c
+ 0020                   .dbend
+ 0020                   .dbfunc e PageToUart0 _PageToUart0 fV
+ 0020           ;              p -> R12,R13
+ 0020           ;            cnt -> R10
+ 0020           ;           page -> R14
+                        .even
+ 0020           _PageToUart0::
+ 0020 0E940000          xcall push_xgset00FC
+ 0024 E02E              mov R14,R16
+ 0026                   .dbline -1
+ 0026                   .dbline 60
+ 0026           ; }
+ 0026           ; 
+ 0026           ; char ProgBuf[256];
+ 0026           ; 
+ 0026           ; void PageToUart0(char page)
+ 0026           ; {
+ 0026                   .dbline 61
+ 0026           ;  char cnt = 0;
+ 0026 AA24              clr R10
+ 0028                   .dbline 63
+ 0028           ;  const char *p;
+ 0028           ;  p = (const char*)(page<<8);
+ 0028 CE2C              mov R12,R14
+ 002A DD24              clr R13
+ 002C DC2C              mov R13,R12
+ 002E CC24              clr R12
+ 0030                   .dbline 64
+ 0030           ;  SymbolToUart0('P');
+ 0030 00E5              ldi R16,80
+ 0032 0E940000          xcall _SymbolToUart0
+ 0036                   .dbline 65
+ 0036           ;  SymbolToUart0('g');
+ 0036 07E6              ldi R16,103
+ 0038 0E940000          xcall _SymbolToUart0
+ 003C                   .dbline 66
+ 003C           ;  SymbolToUart0(page);
+ 003C 0E2D              mov R16,R14
+ 003E 0E940000          xcall _SymbolToUart0
+ 0042 0EC0              xjmp L9
+ 0044           L8:
+ 0044                   .dbline 68
+ 0044           ;  while(1)
+ 0044           ;  {
+ 0044                   .dbline 69
+ 0044           ;   SymbolToUart0Gar(*p++);
+ 0044 1601              movw R2,R12
+ 0046 C101              movw R24,R2
+ 0048 0196              adiw R24,1
+ 004A 6C01              movw R12,R24
+ 004C F101              movw R30,R2
+ 004E 0691              elpm R16,Z
+ 0050 0E940000          xcall _SymbolToUart0Gar
+ 0054                   .dbline 70
+ 0054           ;   if(++cnt == 0) break;
+ 0054 8A2D              mov R24,R10
+ 0056 8F5F              subi R24,255    ; addi 1
+ 0058 A82E              mov R10,R24
+ 005A 8823              tst R24
+ 005C 09F4              brne L11
+ 005E           X1:
+ 005E                   .dbline 70
+ 005E 01C0              xjmp L10
+ 0060           L11:
+ 0060                   .dbline 71
+ 0060           ;  }
+ 0060           L9:
+ 0060                   .dbline 67
+ 0060 F1CF              xjmp L8
+ 0062           L10:
+ 0062                   .dbline -2
+ 0062           L7:
+ 0062                   .dbline 0 ; func end
+ 0062 0C940000          xjmp pop_xgset00FC
+ 0066                   .dbsym r p 12 pkc
+ 0066                   .dbsym r cnt 10 c
+ 0066                   .dbsym r page 14 c
+ 0066                   .dbend
+ 0066                   .dbfunc e BufToFlash _BufToFlash fV
+ 0066           ;           page -> <dead>
+                        .even
+ 0066           _BufToFlash::
+ 0066 1A93              st -y,r17
+ 0068 0A93              st -y,r16
+ 006A                   .dbline -1
+ 006A                   .dbline 75
+ 006A           ; }
+ 006A           ; 
+ 006A           ; void BufToFlash(char page)
+ 006A           ; {
+ 006A                   .dbline 76
+ 006A           ;  CLI();        //!!!!!!!
+ 006A F894              cli
+ 006C                   .dbline 77
+ 006C           ;  asm("mov     r31, r16"); 
+ 006C F02F              mov     r31, r16
+ 006E                   .dbline 78
+ 006E           ;  asm("ldi     r30, 0x00"); 
+ 006E E0E0              ldi     r30, 0x00
+ 0070                   .dbline 80
+ 0070           ;    
+ 0070           ;  WaitSpm(0x03);//Стереть страницу  
+ 0070 03E0              ldi R16,3
+ 0072 CEDF              xcall _WaitSpm
+ 0074                   .dbline 81
+ 0074           ;  WaitSpm(0x11); 
+ 0074 01E1              ldi R16,17
+ 0076 CCDF              xcall _WaitSpm
+ 0078                   .dbline 83
+ 0078           ;                
+ 0078           ;  Counter = 128;  
+ 0078 50E8              ldi R21,128
+ 007A                   .dbline 85
+ 007A           ;     
+ 007A           ;  asm("ldi r26, <_ProgBuf");  
+ 007A A0E0              ldi r26, <_ProgBuf
+ 007C                   .dbline 86
+ 007C           ;  asm("ldi r27, >_ProgBuf");  
+ 007C B0E0              ldi r27, >_ProgBuf
+ 007E 07C0              xjmp L15
+ 0080           L14:
+ 0080                   .dbline 88
+ 0080           ;  while(1)
+ 0080           ;  {
+ 0080                   .dbline 89
+ 0080           ;    asm("ld r0,x+");
+ 0080 0D90              ld r0,x+
+ 0082                   .dbline 90
+ 0082           ;    asm("ld r1,x+");
+ 0082 1D90              ld r1,x+
+ 0084                   .dbline 91
+ 0084           ;    WaitSpm(0x01);
+ 0084 01E0              ldi R16,1
+ 0086 C4DF              xcall _WaitSpm
+ 0088                   .dbline 92
+ 0088           ;    Counter--;
+ 0088 5A95              dec R21
+ 008A                   .dbline 93
+ 008A           ;    if(Counter)  asm("adiw r30, 2");
+ 008A 11F0              breq L16
+ 008C           X2:
+ 008C                   .dbline 93
+ 008C 3296              adiw r30, 2
+ 008E                   .dbline 94
+ 008E           ;    else break;
+ 008E           L18:
+ 008E                   .dbline 95
+ 008E           ;   }
+ 008E           L15:
+ 008E                   .dbline 87
+ 008E F8CF              xjmp L14
+ 0090           L16:
+ 0090                   .dbline 97
+ 0090           ;  
+ 0090           ;   asm("ldi    r30, 0x00"); 
+ 0090 E0E0              ldi     r30, 0x00
+ 0092                   .dbline 98
+ 0092           ;   WaitSpm(0x05);//Писать 
+ 0092 05E0              ldi R16,5
+ 0094 BDDF              xcall _WaitSpm
+ 0096                   .dbline 99
+ 0096           ;   WaitSpm(0x11); 
+ 0096 01E1              ldi R16,17
+ 0098 BBDF              xcall _WaitSpm
+ 009A                   .dbline 100
+ 009A           ;   SEI();    
+ 009A 7894              sei
+ 009C                   .dbline -2
+ 009C           L13:
+ 009C                   .dbline 0 ; func end
+ 009C 2296              adiw R28,2
+ 009E 0895              ret
+ 00A0                   .dbsym l page 0 c
+ 00A0                   .dbend
+ 00A0                   .dbfunc e BufToUart0 _BufToUart0 fV
+ 00A0           ;              k -> R10
+                        .even
+ 00A0           _BufToUart0::
+ 00A0 AA92              st -y,R10
+ 00A2                   .dbline -1
+ 00A2                   .dbline 105
+ 00A2           ; }
+ 00A2           ; 
+ 00A2           ; 
+ 00A2           ; void BufToUart0(void)
+ 00A2           ; {
+ 00A2                   .dbline 107
+ 00A2           ;  char k;
+ 00A2           ;  k=0;
+ 00A2 AA24              clr R10
+ 00A4 11C0              xjmp L21
+ 00A6           L20:
+ 00A6                   .dbline 109
+ 00A6           ;  while(1)
+ 00A6           ;    {
+ 00A6                   .dbline 110
+ 00A6           ;       SymbolToUart0(ProgBuf[k++]);
+ 00A6 2A2C              mov R2,R10
+ 00A8 3324              clr R3
+ 00AA 822D              mov R24,R2
+ 00AC 8F5F              subi R24,255    ; addi 1
+ 00AE A82E              mov R10,R24
+ 00B0 80E0              ldi R24,<_ProgBuf
+ 00B2 90E0              ldi R25,>_ProgBuf
+ 00B4 E22D              mov R30,R2
+ 00B6 FF27              clr R31
+ 00B8 E80F              add R30,R24
+ 00BA F91F              adc R31,R25
+ 00BC 0081              ldd R16,z+0
+ 00BE 0E940000          xcall _SymbolToUart0
+ 00C2                   .dbline 111
+ 00C2           ;     if(!k) break;
+ 00C2 AA20              tst R10
+ 00C4 09F4              brne L23
+ 00C6           X3:
+ 00C6                   .dbline 111
+ 00C6 01C0              xjmp L22
+ 00C8           L23:
+ 00C8                   .dbline 112
+ 00C8           ;    }
+ 00C8           L21:
+ 00C8                   .dbline 108
+ 00C8 EECF              xjmp L20
+ 00CA           L22:
+ 00CA                   .dbline -2
+ 00CA           L19:
+ 00CA                   .dbline 0 ; func end
+ 00CA A990              ld R10,y+
+ 00CC 0895              ret
+ 00CE                   .dbsym r k 10 c
+ 00CE                   .dbend
+ 00CE                   .dbfunc e Load0 _Load0 fV
+ 00CE           ;              p -> R12,R13
+ 00CE           ;              r -> R10
+                        .even
+ 00CE           _Load0::
+ 00CE 0E940000          xcall push_xgset003C
+ 00D2                   .dbline -1
+ 00D2                   .dbline 116
+ 00D2           ; }
+ 00D2           ; 
+ 00D2           ; void Load0(void)
+ 00D2           ; {
+ 00D2                   .dbline 119
+ 00D2           ;  const char *p;
+ 00D2           ;  char r;
+ 00D2           ;  p = (const char *)0xE000; //адрес старта загрузчика
+ 00D2 80E0              ldi R24,57344
+ 00D4 90EE              ldi R25,224
+ 00D6 6C01              movw R12,R24
+ 00D8                   .dbline 120
+ 00D8           ;  r = 0;
+ 00D8 AA24              clr R10
+ 00DA                   .dbline 121
+ 00DA           ;  RAMPZ = 1;
+ 00DA 81E0              ldi R24,1
+ 00DC 8BBF              out 0x3b,R24
+ 00DE 18C0              xjmp L27
+ 00E0           L26:
+ 00E0                   .dbline 123
+ 00E0           ;  while(1)
+ 00E0           ;  {
+ 00E0                   .dbline 124
+ 00E0           ;   ProgBuf[r] = *p++;
+ 00E0 1601              movw R2,R12
+ 00E2 C101              movw R24,R2
+ 00E4 0196              adiw R24,1
+ 00E6 6C01              movw R12,R24
+ 00E8 80E0              ldi R24,<_ProgBuf
+ 00EA 90E0              ldi R25,>_ProgBuf
+ 00EC EA2D              mov R30,R10
+ 00EE FF27              clr R31
+ 00F0 E80F              add R30,R24
+ 00F2 F91F              adc R31,R25
+ 00F4 D101              movw R26,R2
+ 00F6 FA93              st -y,R31
+ 00F8 EA93              st -y,R30
+ 00FA FD01              movw R30,R26
+ 00FC 2690              elpm R2,Z
+ 00FE E991              ld R30,y+
+ 0100 F991              ld R31,y+
+ 0102 2082              std z+0,R2
+ 0104                   .dbline 125
+ 0104           ;   if (++r == 0) break;
+ 0104 8A2D              mov R24,R10
+ 0106 8F5F              subi R24,255    ; addi 1
+ 0108 A82E              mov R10,R24
+ 010A 8823              tst R24
+ 010C 09F4              brne L29
+ 010E           X4:
+ 010E                   .dbline 125
+ 010E 01C0              xjmp L28
+ 0110           L29:
+ 0110                   .dbline 126
+ 0110           ;  }
+ 0110           L27:
+ 0110                   .dbline 122
+ 0110 E7CF              xjmp L26
+ 0112           L28:
+ 0112                   .dbline 127
+ 0112           ;  ProgBuf[0x68] = 0;
+ 0112 2224              clr R2
+ 0114 20926800          sts _ProgBuf+104,R2
+ 0118                   .dbline 128
+ 0118           ;  ProgBuf[0x69] = ServZone;
+ 0118 20900101          lds R2,_ServZone
+ 011C 20926900          sts _ProgBuf+105,R2
+ 0120                   .dbline 129
+ 0120           ;  ProgBuf[0x6A] = SysNum;
+ 0120 20900001          lds R2,_SysNum
+ 0124 20926A00          sts _ProgBuf+106,R2
+ 0128                   .dbline 130
+ 0128           ;  RAMPZ = 0;
+ 0128 2224              clr R2
+ 012A 2BBE              out 0x3b,R2
+ 012C                   .dbline 131
+ 012C           ;  BufToFlash(0);
+ 012C 0027              clr R16
+ 012E 9BDF              xcall _BufToFlash
+ 0130                   .dbline 133
+ 0130           ;  //BufToUart0();
+ 0130           ;  PageToUart0(0);
+ 0130 0027              clr R16
+ 0132 76DF              xcall _PageToUart0
+ 0134                   .dbline -2
+ 0134           L25:
+ 0134                   .dbline 0 ; func end
+ 0134 0C940000          xjmp pop_xgset003C
+ 0138                   .dbsym r p 12 pkc
+ 0138                   .dbsym r r 10 c
+ 0138                   .dbend
+ 0138                   .dbfunc e MayBeLoad0 _MayBeLoad0 fV
+                        .even
+ 0138           _MayBeLoad0::
+ 0138 AA92              st -y,R10
+ 013A BA92              st -y,R11
+ 013C                   .dbline -1
+ 013C                   .dbline 137
+ 013C           ; }
+ 013C           ; 
+ 013C           ; void MayBeLoad0(void)
+ 013C           ; {
+ 013C                   .dbline 138
+ 013C           ;  if (GetUart0Counter() < 4) return;
+ 013C 0E940000          xcall _GetUart0Counter
+ 0140 0430              cpi R16,4
+ 0142 08F4              brsh L35
+ 0144           X5:
+ 0144                   .dbline 138
+ 0144 62C0              xjmp L34
+ 0146           L35:
+ 0146                   .dbline 139
+ 0146           ;  if (GetUart0Symbol() != 'L') return;
+ 0146 0E940000          xcall _GetUart0Symbol
+ 014A 0C34              cpi R16,76
+ 014C 09F0              breq L37
+ 014E           X6:
+ 014E                   .dbline 139
+ 014E 5DC0              xjmp L34
+ 0150           L37:
+ 0150                   .dbline 140
+ 0150           ;  if (GetUart0Symbol() != 'O') return;
+ 0150 0E940000          xcall _GetUart0Symbol
+ 0154 A02E              mov R10,R16
+ 0156 0F34              cpi R16,79
+ 0158 09F0              breq L39
+ 015A           X7:
+ 015A                   .dbline 140
+ 015A 57C0              xjmp L34
+ 015C           L39:
+ 015C                   .dbline 141
+ 015C           ;  if (GetUart0Symbol() != 'A') return;
+ 015C 0E940000          xcall _GetUart0Symbol
+ 0160 A02E              mov R10,R16
+ 0162 0134              cpi R16,65
+ 0164 09F0              breq L41
+ 0166           X8:
+ 0166                   .dbline 141
+ 0166 51C0              xjmp L34
+ 0168           L41:
+ 0168                   .dbline 142
+ 0168           ;  switch (GetUart0Symbol())
+ 0168 0E940000          xcall _GetUart0Symbol
+ 016C A02E              mov R10,R16
+ 016E BB24              clr R11
+ 0170 C501              movw R24,R10
+ 0172 8235              cpi R24,82
+ 0174 E0E0              ldi R30,0
+ 0176 9E07              cpc R25,R30
+ 0178 09F4              brne X20
+ 017A 47C0              xjmp L44
+ 017C           X20:
+ 017C           X9:
+ 017C 82E5              ldi R24,82
+ 017E 8A15              cp R24,R10
+ 0180 9B05              cpc R25,R11
+ 0182 BCF0              brlt L55
+ 0184           X10:
+ 0184           L54:
+ 0184 C501              movw R24,R10
+ 0186 8434              cpi R24,68
+ 0188 E0E0              ldi R30,0
+ 018A 9E07              cpc R25,R30
+ 018C 09F4              brne X21
+ 018E 3DC0              xjmp L44
+ 0190           X21:
+ 0190           X11:
+ 0190 84E4              ldi R24,68
+ 0192 90E0              ldi R25,0
+ 0194 8A15              cp R24,R10
+ 0196 9B05              cpc R25,R11
+ 0198 34F0              brlt L57
+ 019A           X12:
+ 019A           L56:
+ 019A C501              movw R24,R10
+ 019C 8033              cpi R24,48
+ 019E E0E0              ldi R30,0
+ 01A0 9E07              cpc R25,R30
+ 01A2 09F1              breq L46
+ 01A4           X13:
+ 01A4 32C0              xjmp L34
+ 01A6           L57:
+ 01A6 C501              movw R24,R10
+ 01A8 8934              cpi R24,73
+ 01AA E0E0              ldi R30,0
+ 01AC 9E07              cpc R25,R30
+ 01AE E9F0              breq L47
+ 01B0           X14:
+ 01B0 2CC0              xjmp L34
+ 01B2           L55:
+ 01B2 C501              movw R24,R10
+ 01B4 8436              cpi R24,100
+ 01B6 E0E0              ldi R30,0
+ 01B8 9E07              cpc R25,R30
+ 01BA 39F1              breq L44
+ 01BC           X15:
+ 01BC 84E6              ldi R24,100
+ 01BE 90E0              ldi R25,0
+ 01C0 8A15              cp R24,R10
+ 01C2 9B05              cpc R25,R11
+ 01C4 34F0              brlt L59
+ 01C6           X16:
+ 01C6           L58:
+ 01C6 C501              movw R24,R10
+ 01C8 8635              cpi R24,86
+ 01CA E0E0              ldi R30,0
+ 01CC 9E07              cpc R25,R30
+ 01CE 91F0              breq L48
+ 01D0           X17:
+ 01D0 1CC0              xjmp L34
+ 01D2           L59:
+ 01D2 C501              movw R24,R10
+ 01D4 8237              cpi R24,114
+ 01D6 E0E0              ldi R30,0
+ 01D8 9E07              cpc R25,R30
+ 01DA B9F0              breq L44
+ 01DC           X18:
+ 01DC 8337              cpi R24,115
+ 01DE E0E0              ldi R30,0
+ 01E0 9E07              cpc R25,R30
+ 01E2 89F0              breq L53
+ 01E4           X19:
+ 01E4 12C0              xjmp L34
+ 01E6           L46:
+ 01E6                   .dbline 144
+ 01E6           ;  {
+ 01E6           ;               case '0': Load0(); break;
+ 01E6 73DF              xcall _Load0
+ 01E8                   .dbline 144
+ 01E8 10C0              xjmp L44
+ 01EA           L47:
+ 01EA                   .dbline 145
+ 01EA           ;               case 'I': FlashToUart0(Name); break;
+ 01EA 00E0              ldi R16,<_Name
+ 01EC 10E0              ldi R17,>_Name
+ 01EE 0E940000          xcall _FlashToUart0
+ 01F2                   .dbline 145
+ 01F2 0BC0              xjmp L44
+ 01F4           L48:
+ 01F4                   .dbline 146
+ 01F4           ;               case 'V': FlashToUart0(Vers); SymbolToUart0(ServZone); break;
+ 01F4 00E0              ldi R16,<_Vers
+ 01F6 10E0              ldi R17,>_Vers
+ 01F8 0E940000          xcall _FlashToUart0
+ 01FC                   .dbline 146
+ 01FC 00910101          lds R16,_ServZone
+ 0200 0E940000          xcall _SymbolToUart0
+ 0204                   .dbline 146
+ 0204 02C0              xjmp L44
+ 0206           L53:
+ 0206                   .dbline 151
+ 0206           ;               case 'D': break;
+ 0206           ;               case 'd': break;
+ 0206           ;               case 'R': break;
+ 0206           ;               case 'r': break;
+ 0206           ;               case 's': asm("jmp 0x0000");
+ 0206 0C940000          jmp 0x0000
+ 020A                   .dbline 152
+ 020A           ;               default: return;
+ 020A           L44:
+ 020A                   .dbline -2
+ 020A           L34:
+ 020A                   .dbline 0 ; func end
+ 020A B990              ld R11,y+
+ 020C A990              ld R10,y+
+ 020E 0895              ret
+ 0210                   .dbend
+ 0210                   .dbfunc e MayBeLoad1 _MayBeLoad1 fV
+                        .even
+ 0210           _MayBeLoad1::
+ 0210 AA92              st -y,R10
+ 0212 BA92              st -y,R11
+ 0214                   .dbline -1
+ 0214                   .dbline 157
+ 0214           ;  }
+ 0214           ; }
+ 0214           ; 
+ 0214           ; void MayBeLoad1(void)
+ 0214           ; {
+ 0214                   .dbline 158
+ 0214           ;  if (GetUart1Counter() < 4) return;
+ 0214 0E940000          xcall _GetUart1Counter
+ 0218 0430              cpi R16,4
+ 021A 08F4              brsh L61
+ 021C           X22:
+ 021C                   .dbline 158
+ 021C 5EC0              xjmp L60
+ 021E           L61:
+ 021E                   .dbline 159
+ 021E           ;  if (GetUart1Symbol() != 'L') return;
+ 021E 0E940000          xcall _GetUart1Symbol
+ 0222 0C34              cpi R16,76
+ 0224 09F0              breq L63
+ 0226           X23:
+ 0226                   .dbline 159
+ 0226 59C0              xjmp L60
+ 0228           L63:
+ 0228                   .dbline 160
+ 0228           ;  if (GetUart1Symbol() != 'O') return;
+ 0228 0E940000          xcall _GetUart1Symbol
+ 022C A02E              mov R10,R16
+ 022E 0F34              cpi R16,79
+ 0230 09F0              breq L65
+ 0232           X24:
+ 0232                   .dbline 160
+ 0232 53C0              xjmp L60
+ 0234           L65:
+ 0234                   .dbline 161
+ 0234           ;  if (GetUart1Symbol() != 'A') return;
+ 0234 0E940000          xcall _GetUart1Symbol
+ 0238 A02E              mov R10,R16
+ 023A 0134              cpi R16,65
+ 023C 09F0              breq L67
+ 023E           X25:
+ 023E                   .dbline 161
+ 023E 4DC0              xjmp L60
+ 0240           L67:
+ 0240                   .dbline 162
+ 0240           ;  switch (GetUart1Symbol())
+ 0240 0E940000          xcall _GetUart1Symbol
+ 0244 A02E              mov R10,R16
+ 0246 BB24              clr R11
+ 0248 C501              movw R24,R10
+ 024A 8235              cpi R24,82
+ 024C E0E0              ldi R30,0
+ 024E 9E07              cpc R25,R30
+ 0250 09F4              brne X37
+ 0252 43C0              xjmp L70
+ 0254           X37:
+ 0254           X26:
+ 0254 82E5              ldi R24,82
+ 0256 8A15              cp R24,R10
+ 0258 9B05              cpc R25,R11
+ 025A BCF0              brlt L81
+ 025C           X27:
+ 025C           L80:
+ 025C C501              movw R24,R10
+ 025E 8434              cpi R24,68
+ 0260 E0E0              ldi R30,0
+ 0262 9E07              cpc R25,R30
+ 0264 09F4              brne X38
+ 0266 39C0              xjmp L70
+ 0268           X38:
+ 0268           X28:
+ 0268 84E4              ldi R24,68
+ 026A 90E0              ldi R25,0
+ 026C 8A15              cp R24,R10
+ 026E 9B05              cpc R25,R11
+ 0270 34F0              brlt L83
+ 0272           X29:
+ 0272           L82:
+ 0272 C501              movw R24,R10
+ 0274 8033              cpi R24,48
+ 0276 E0E0              ldi R30,0
+ 0278 9E07              cpc R25,R30
+ 027A 09F1              breq L72
+ 027C           X30:
+ 027C 2EC0              xjmp L60
+ 027E           L83:
+ 027E C501              movw R24,R10
+ 0280 8934              cpi R24,73
+ 0282 E0E0              ldi R30,0
+ 0284 9E07              cpc R25,R30
+ 0286 E9F0              breq L73
+ 0288           X31:
+ 0288 28C0              xjmp L60
+ 028A           L81:
+ 028A C501              movw R24,R10
+ 028C 8436              cpi R24,100
+ 028E E0E0              ldi R30,0
+ 0290 9E07              cpc R25,R30
+ 0292 19F1              breq L70
+ 0294           X32:
+ 0294 84E6              ldi R24,100
+ 0296 90E0              ldi R25,0
+ 0298 8A15              cp R24,R10
+ 029A 9B05              cpc R25,R11
+ 029C 34F0              brlt L85
+ 029E           X33:
+ 029E           L84:
+ 029E C501              movw R24,R10
+ 02A0 8635              cpi R24,86
+ 02A2 E0E0              ldi R30,0
+ 02A4 9E07              cpc R25,R30
+ 02A6 91F0              breq L74
+ 02A8           X34:
+ 02A8 18C0              xjmp L60
+ 02AA           L85:
+ 02AA C501              movw R24,R10
+ 02AC 8237              cpi R24,114
+ 02AE E0E0              ldi R30,0
+ 02B0 9E07              cpc R25,R30
+ 02B2 99F0              breq L70
+ 02B4           X35:
+ 02B4 8337              cpi R24,115
+ 02B6 E0E0              ldi R30,0
+ 02B8 9E07              cpc R25,R30
+ 02BA 69F0              breq L79
+ 02BC           X36:
+ 02BC 0EC0              xjmp L60
+ 02BE           L72:
+ 02BE                   .dbline 164
+ 02BE           ;  {
+ 02BE           ;               case '0': Load0(); break;
+ 02BE 07DF              xcall _Load0
+ 02C0                   .dbline 164
+ 02C0 0CC0              xjmp L70
+ 02C2           L73:
+ 02C2                   .dbline 165
+ 02C2           ;               case 'I': FlashToUart1(Name); break;
+ 02C2 00E0              ldi R16,<_Name
+ 02C4 10E0              ldi R17,>_Name
+ 02C6 0E940000          xcall _FlashToUart1
+ 02CA                   .dbline 165
+ 02CA 07C0              xjmp L70
+ 02CC           L74:
+ 02CC                   .dbline 166
+ 02CC           ;               case 'V': FlashToUart1(Vers); break;
+ 02CC 00E0              ldi R16,<_Vers
+ 02CE 10E0              ldi R17,>_Vers
+ 02D0 0E940000          xcall _FlashToUart1
+ 02D4                   .dbline 166
+ 02D4 02C0              xjmp L70
+ 02D6           L79:
+ 02D6                   .dbline 171
+ 02D6           ;               case 'D': break;
+ 02D6           ;               case 'd': break;
+ 02D6           ;               case 'R': break;
+ 02D6           ;               case 'r': break;
+ 02D6           ;               case 's': asm("jmp 0x0000");
+ 02D6 0C940000          jmp 0x0000
+ 02DA                   .dbline 172
+ 02DA           ;               default: return;
+ 02DA           L70:
+ 02DA                   .dbline -2
+ 02DA           L60:
+ 02DA                   .dbline 0 ; func end
+ 02DA B990              ld R11,y+
+ 02DC A990              ld R10,y+
+ 02DE 0895              ret
+ 02E0                   .dbend
+ 02E0                   .dbfunc e main _main fV
+                        .even
+ 02E0           _main::
+ 02E0                   .dbline -1
+ 02E0                   .dbline 177
+ 02E0           ;  }
+ 02E0           ; }
+ 02E0           ; 
+ 02E0           ; void main(void)
+ 02E0           ; {
+ 02E0                   .dbline 178
+ 02E0           ;  MCUCR = 1;
+ 02E0 81E0              ldi R24,1
+ 02E2 85BF              out 0x35,R24
+ 02E4                   .dbline 179
+ 02E4           ;  MCUCR = 2;
+ 02E4 82E0              ldi R24,2
+ 02E6 85BF              out 0x35,R24
+ 02E8                   .dbline 180
+ 02E8           ;  RAMPZ = 0;
+ 02E8 2224              clr R2
+ 02EA 2BBE              out 0x3b,R2
+ 02EC                   .dbline 181
+ 02EC           ;  ServZone = *((const char*)(0x69));
+ 02EC E9E6              ldi R30,105
+ 02EE F0E0              ldi R31,0
+ 02F0 2690              elpm R2,Z
+ 02F2 20920101          sts _ServZone,R2
+ 02F6                   .dbline 182
+ 02F6           ;  SysNum = 3;
+ 02F6 83E0              ldi R24,3
+ 02F8 80930001          sts _SysNum,R24
+ 02FC                   .dbline 183
+ 02FC           ;  RAMPZ = 1;
+ 02FC 81E0              ldi R24,1
+ 02FE 8BBF              out 0x3b,R24
+ 0300                   .dbline 184
+ 0300           ;  Uart0Init();
+ 0300 0E940000          xcall _Uart0Init
+ 0304                   .dbline 185
+ 0304           ;  Uart1Init();
+ 0304 0E940000          xcall _Uart1Init
+ 0308 02C0              xjmp L88
+ 030A           L87:
+ 030A                   .dbline 192
+ 030A           ;  //PageToUart0(0);
+ 030A           ;  //FlashToUart0(Name);
+ 030A           ;  //FlashToUart0(Vers);
+ 030A           ;  //LoaderL();
+ 030A           ;  //Load0();
+ 030A           ;  while(1)
+ 030A           ;  {
+ 030A                   .dbline 193
+ 030A           ;   MayBeLoad0();
+ 030A 16DF              xcall _MayBeLoad0
+ 030C                   .dbline 194
+ 030C           ;   MayBeLoad1();
+ 030C 81DF              xcall _MayBeLoad1
+ 030E                   .dbline 195
+ 030E           ;  }
+ 030E           L88:
+ 030E                   .dbline 191
+ 030E FDCF              xjmp L87
+ 0310           L90:
+ 0310                   .dbline 198
+ 0310           ;  
+ 0310           ;  while(1)
+ 0310           ;  {
+ 0310                   .dbline 200
+ 0310           ; 
+ 0310           ;  }
+ 0310           L91:
+ 0310                   .dbline 197
+ 0310 FFCF              xjmp L90
+ 0312           X39:
+ 0312                   .dbline -2
+ 0312           L86:
+ 0312                   .dbline 0 ; func end
+ 0312 0895              ret
+ 0314                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Loader\main.c
+ 0000           _ProgBuf::
+ 0000                   .blkb 256
+ 0100                   .dbsym e ProgBuf _ProgBuf A[256:256]c
+ 0100           _SysNum::
+ 0100                   .blkb 1
+ 0101                   .dbsym e SysNum _SysNum c
+ 0101           _ServZone::
+ 0101                   .blkb 1
+ 0102                   .dbsym e ServZone _ServZone c
+ 0102           ;  //asm("jmp 0x1E000");
+ 0102           ;  //StringToUart0("TxComplete");
+ 0102           ; }
+ 0102           ; 

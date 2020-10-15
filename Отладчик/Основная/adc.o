@@ -1,0 +1,64 @@
+XL
+H 5 areas 4 global symbols
+M adc.c
+A text size 8C flags 0
+dbfile adc.c
+dbfile D:\Тест2021\Отладчик\Основная\adc.c
+dbfunc e adc_init 0 fV
+dbline FFFFFFFF 0
+dbline 12 0
+dbline 13 0
+dbline 14 6
+dbline 15 10
+dbline 16 14
+dbline 17 1A
+dbline FFFFFFFE 24
+dbline 0 24
+dbfunc e adc_isr 26 fV
+dbline FFFFFFFF 36
+dbline 1C 36
+dbline 1D 36
+dbline 1E 60
+dbline 1F 6A
+dbline 20 70
+dbline FFFFFFFE 7A
+dbline 0 7A
+S _adc_isr Def0026
+S _adc_init Def0000
+A data size 1 flags 20
+dbfile adc.c
+dbfile D:\Тест2021\Отладчик\Основная\adc.c
+dbsym e ChNum 0 c
+S _ChNum Def0000
+A idata size 1 flags 0
+A vector size 64 flags C
+A bss size 10 flags 20
+dbfile D:\Тест2021\Отладчик\Основная\adc.c
+dbsym e AdcBuf 0 A[16:8]I
+S _AdcBuf Def0000
+T 00 00 00
+R 00 00 02 00
+T 00 00 22 24 20 92 7A 00 80 91 00 00 80 5C 80 93
+R 00 00 00 00 00 0A 01 00
+T 0E 00 7C 00 80 E8 80 BF 8F E8 80 93 7A 00 80 91
+R 00 00 00 00
+T 1C 00 7A 00 80 64 80 93 7A 00 08 95
+R 00 00 00 00
+T 60 00 0C 94 13 00
+R 00 00 03 00 10 04 00 00
+T 26 00 2A 92 3A 92 8A 93 9A 93 EA 93 FA 93 2F B6
+R 00 00 00 00
+T 34 00 2A 92 20 90 00 00 33 24 82 2D 8F 5F 80 93
+R 00 00 00 00 00 06 01 00
+T 42 00 00 00 80 E0
+R 00 00 00 00 00 02 01 00 20 04 04 00 00 00
+T 46 00 90 E0 E2 2D FF 27 EE 0F FF 1F E8 0F F9 1F
+R 00 00 00 00 40 02 04 00 00 00
+T 54 00 20 90 78 00 30 90 79 00 31 82 20 82 80 91
+R 00 00 00 00
+T 62 00 00 00 87 70 80 93 00 00 80 5C 80 93 7C 00
+R 00 00 00 00 00 02 01 00 00 08 01 00
+T 70 00 80 91 7A 00 80 64 80 93 7A 00 29 90 2F BE
+R 00 00 00 00
+T 7E 00 F9 91 E9 91 99 91 89 91 39 90 29 90 18 95
+R 00 00 00 00

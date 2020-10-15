@@ -1,0 +1,243 @@
+XL
+H 3 areas 15 global symbols
+M Uart0.c
+A text size 20C flags 0
+dbfile Uart0.c
+dbfile D:\Тест2021\Отладчик\Основная\Uart0.c
+dbfunc e uart0_tx_isr 0 fV
+dbline FFFFFFFF 6
+dbline 22 6
+dbline 23 6
+dbline FFFFFFFE 10
+dbline 0 10
+dbfunc e uart0_udre_isr 18 fV
+dbline FFFFFFFF 28
+dbline 28 28
+dbline 29 28
+dbline 2B 48
+dbline 2B 58
+dbline FFFFFFFE 62
+dbline 0 62
+dbfunc e SymbolToUart0 74 fc
+dbsym r s 10 c
+dbline FFFFFFFF 74
+dbline 2F 74
+dbline 2F 74
+dbline 2F 7C
+dbline 30 80
+dbline 31 82
+dbline 32 9E
+dbline 34 A8
+dbline 35 B2
+dbline 36 B4
+dbline FFFFFFFE B6
+dbline 0 B6
+dbfunc e SymbolToUart0Gar B8 fV
+dbsym r s A c
+dbline FFFFFFFF BC
+dbline 39 BC
+dbline 39 BC
+dbline 39 BC
+dbline FFFFFFFE C4
+dbline 0 C4
+dbfunc e StringToUart0 C8 fV
+dbsym r ptr A pc
+dbline FFFFFFFF CE
+dbline 3C CE
+dbline 3C D0
+dbline 3C D8
+dbline FFFFFFFE E0
+dbline 0 E0
+dbfunc e FlashToUart0 E6 fV
+dbsym r ptr A pkc
+dbline FFFFFFFF EC
+dbline 40 EC
+dbline 40 EE
+dbline 40 FC
+dbline FFFFFFFE 104
+dbline 0 104
+dbfunc e uart0_rx_isr 10A fV
+dbline FFFFFFFF 11A
+dbline 54 11A
+dbline 54 11A
+dbline 55 12C
+dbline FFFFFFFE 150
+dbline 0 150
+dbfunc e GetUart0Counter 162 fI
+dbsym r n 10 I
+dbline FFFFFFFF 162
+dbline 5B 162
+dbline 5C 162
+dbline 5C 164
+dbline 5C 16C
+dbline 5D 16E
+dbline FFFFFFFE 16E
+dbline 0 16E
+dbfunc e ReturnUart0Symbol 170 fV
+dbsym r n 10 I
+dbline FFFFFFFF 170
+dbline 62 170
+dbline 62 170
+dbline 63 172
+dbline 65 186
+dbline 67 19A
+dbline FFFFFFFE 19C
+dbline 0 19C
+dbfunc e GetUart0Symbol 19E fc
+dbsym r symbol 10 c
+dbline FFFFFFFF 19E
+dbline 6B 19E
+dbline 6C 19E
+dbline 6E 1BE
+dbline 6E 1C0
+dbline 6E 1D2
+dbline 6F 1D4
+dbline FFFFFFFE 1D4
+dbline 0 1D4
+dbfunc e GetNextUartSym 1D6 fc
+dbline FFFFFFFF 1D6
+dbline 73 1D6
+dbline 73 1D6
+dbline 73 1D6
+dbline 74 1E6
+dbline FFFFFFFE 1E6
+dbline 0 1E6
+dbfunc e Uart0Init 1E8 fV
+dbline FFFFFFFF 1E8
+dbline 80 1E8
+dbline 80 1E8
+dbline 81 1EE
+dbline 82 1F2
+dbline 84 1F8
+dbline 87 204
+dbline FFFFFFFE 20A
+dbline 0 20A
+S _uart0_udre_isr Def0018
+S _ReturnUart0Symbol Def0170
+S _GetUart0Counter Def0162
+S _uart0_rx_isr Def010A
+S _uart0_tx_isr Def0000
+S _SymbolToUart0 Def0074
+S _StringToUart0 Def00C8
+S _SymbolToUart0Gar Def00B8
+S _Uart0Init Def01E8
+S _GetUart0Symbol Def019E
+S _FlashToUart0 Def00E6
+S _GetNextUartSym Def01D6
+A vector size 5C flags C
+A bss size 20A flags 20
+dbfile D:\Тест2021\Отладчик\Основная\Uart0.c
+dbsym e Receive0Counter 0 I
+dbsym e Receive0Read 2 I
+dbsym e Receive0Write 4 I
+dbsym e Uart0ReceiveBuffer 6 A[256:256]c
+dbsym e TxCFlag 106 c
+dbsym e Count0 107 c
+dbsym e Write0 108 c
+dbsym e Read0 109 c
+dbsym e FIFO0 10A A[256:256]c
+S _Read0 Def0109
+S _Receive0Counter Def0000
+S _Uart0ReceiveBuffer Def0006
+S _Receive0Write Def0004
+S _Count0 Def0107
+S _Write0 Def0108
+S _FIFO0 Def010A
+S _Receive0Read Def0002
+S _TxCFlag Def0106
+T 58 00 0C 94 00 00
+R 00 00 01 00 10 04 00 00
+T 00 00 8A 93 8F B7 8A 93 80 91 06 01 81 60 80 93
+R 00 00 00 00 00 0A 02 00
+T 0E 00 06 01 89 91 8F BF 89 91 18 95
+R 00 00 00 00 00 02 02 00
+T 54 00 0C 94 0C 00
+R 00 00 01 00 10 04 00 00
+T 18 00 2A 92 3A 92 8A 93 9A 93 EA 93 FA 93 2F B6
+R 00 00 00 00
+T 26 00 2A 92 20 90 09 01 33 24 82 2D 8F 5F 80 93
+R 00 00 00 00 00 06 02 00
+T 34 00 09 01 80 E0
+R 00 00 00 00 00 02 02 00 20 04 02 00 0A 01
+T 38 00 90 E0 E2 2D FF 27 E8 0F F9 1F 20 80 20 92
+R 00 00 00 00 40 02 02 00 0A 01
+T 46 00 C6 00 80 91 07 01 81 50 28 2E 20 92 07 01
+R 00 00 00 00 00 06 02 00 00 0E 02 00
+T 54 00 88 23 29 F4 80 91 C1 00 8F 7D 80 93 C1 00
+R 00 00 00 00
+T 62 00 29 90 2F BE F9 91 E9 91 99 91 89 91 39 90
+R 00 00 00 00
+T 70 00 29 90 18 95
+R 00 00 00 00
+T 74 00 80 91 07 01 8F 3F 11 F4 00 27 1B C0 F8 94
+R 00 00 00 00 00 04 02 00
+T 82 00 20 90 08 01 33 24 82 2D 8F 5F 80 93 08 01
+R 00 00 00 00 00 04 02 00 00 0E 02 00
+T 90 00 80 E0 90 E0 E2 2D FF 27 E8 0F F9 1F 00 83
+R 00 00 00 00 20 02 02 00 0A 01 40 04 02 00 0A 01
+T 9E 00 80 91 07 01 8F 5F 80 93 07 01 80 91 C1 00
+R 00 00 00 00 00 04 02 00 00 0A 02 00
+T AC 00 80 62 80 93 C1 00 78 94 01 E0 08 95
+R 00 00 00 00
+T B8 00 AA 92 A0 2E 0A 2D DA DF 00 23 E1 F3 A9 90
+R 00 00 00 00
+T C6 00 08 95
+R 00 00 00 00
+T C8 00 AA 92 BA 92 58 01 04 C0 F5 01 01 91 5F 01
+R 00 00 00 00
+T D6 00 F0 DF F5 01 20 80 22 20 C1 F7 B9 90 A9 90
+R 00 00 00 00
+T E4 00 08 95
+R 00 00 00 00
+T E6 00 AA 92 BA 92 58 01 07 C0 15 01 C1 01 01 96
+R 00 00 00 00
+T F4 00 5C 01 F1 01 06 91 DE DF F5 01 26 90 22 20
+R 00 00 00 00
+T 02 01 A9 F7 B9 90 A9 90 08 95
+R 00 00 00 00
+T 50 00 0C 94 85 00
+R 00 00 01 00 10 04 00 00
+T 0A 01 2A 92 3A 92 8A 93 9A 93 EA 93 FA 93 2F B6
+R 00 00 00 00
+T 18 01 2A 92 80 91 00 00 90 91 01 00 01 96 90 93
+R 00 00 00 00 00 06 02 00 00 0A 02 00
+T 26 01 01 00 80 93 00 00 20 90 04 00 30 90
+R 00 00 00 00 00 02 02 00 00 06 02 00 00 0A 02 00
+T 32 01 05 00 C1 01 01 96 90 93 05 00 80 93 04 00
+R 00 00 00 00 00 02 02 00 00 0A 02 00 00 0E 02 00
+T 40 01 80 E0 90 E0 F1 01 E8 0F F9 1F 20 90 C6 00
+R 00 00 00 00 20 02 02 00 06 00 40 04 02 00 06 00
+T 4E 01 20 82 29 90 2F BE F9 91 E9 91 99 91 89 91
+R 00 00 00 00
+T 5C 01 39 90 29 90 18 95
+R 00 00 00 00
+T 62 01 F8 94 00 91 00 00 10 91 01 00 78 94 08 95
+R 00 00 00 00 00 06 02 00 00 0A 02 00
+T 70 01 F8 94 20 90 02 00 30 90 03 00 20 1A 31 0A
+R 00 00 00 00 00 06 02 00 00 0A 02 00
+T 7E 01 30 92 03 00 20 92 02 00 20 90 00 00 30 90
+R 00 00 00 00 00 04 02 00 00 08 02 00 00 0C 02 00
+T 8C 01 01 00 20 0E 31 1E 30 92 01 00 20 92 00 00
+R 00 00 00 00 00 02 02 00 00 0A 02 00 00 0E 02 00
+T 9A 01 78 94 08 95
+R 00 00 00 00
+T 9E 01 20 90 02 00 30 90 03 00 C1 01 01 96 90 93
+R 00 00 00 00 00 04 02 00 00 08 02 00
+T AC 01 03 00 80 93 02 00
+R 00 00 00 00 00 02 02 00 00 06 02 00
+T B2 01 80 E0 90 E0 F1 01 E8 0F F9 1F 00 81 F8 94
+R 00 00 00 00 20 02 02 00 06 00 40 04 02 00 06 00
+T C0 01 80 91 00 00 90 91 01 00 01 97 90 93 01 00
+R 00 00 00 00 00 04 02 00 00 08 02 00 00 0E 02 00
+T CE 01 80 93 00 00 78 94 08 95
+R 00 00 00 00 00 04 02 00
+T D6 01 20 90 00 00 30 90 01 00 22 20 11 F4 33 20
+R 00 00 00 00 00 04 02 00 00 08 02 00
+T E4 01 C1 F3 DB CF
+R 00 00 00 00
+T E8 01 22 24 20 92 C1 00 20 92 C0 00 86 E0 80 93
+R 00 00 00 00
+T F6 01 C2 00 85 E0 90 E0 90 93 C5 00 80 93 C4 00
+R 00 00 00 00
+T 04 02 88 ED 80 93 C1 00 08 95
+R 00 00 00 00

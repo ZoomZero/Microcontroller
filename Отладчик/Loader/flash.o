@@ -1,0 +1,15 @@
+XL
+H 2 areas 2 global symbols
+M flash.c
+A text size 0 flags 0
+dbfile flash.c
+A lit size 10 flags 0
+dbfile D:\Тест2021\Отладчик\Loader\flash.c
+dbsym e Name 0 A[11:11]kc
+dbsym e Vers B A[5:5]kc
+S _Name Def0000
+S _Vers Def000B
+T 00 00 4C 6F 61 64 65 72 31 32 38 34 00 76 31 2E
+R 00 00 01 00
+T 0E 00 30 00
+R 00 00 01 00

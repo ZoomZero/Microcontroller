@@ -1,0 +1,80 @@
+//ICC-AVR application builder : 10.08.2020 14:59:46
+// Target : m1281
+// Crystal: 12.000Mhz
+
+#include <iom1281v.h>
+#include <macros.h>
+
+void port_init(void)
+{
+ PORTA = 0x00;
+ DDRA  = 0x00;
+ PORTB = 0x00;
+ DDRB  = 0x00;
+ PORTC = 0x00; //m103 output only
+ DDRC  = 0x00;
+ PORTD = 0x00;
+ DDRD  = 0x00;
+ PORTE = 0x00;
+ DDRE  = 0x00;
+ PORTF = 0x00;
+ DDRF  = 0x00;
+ PORTG = 0x00;
+ DDRG  = 0x00;
+}
+
+//TIMER1 initialize - prescale:1024
+// WGM: 0) Normal, TOP=0xFFFF
+// desired value: 1Sec
+// actual value:  1,000Sec (0,0%)
+void timer1_init(void)
+{
+ TCCR1B = 0x00; //stop
+ TCNT1H = 0xD2; //setup
+ TCNT1L = 0x3A;
+ OCR1AH = 0x2D;
+ OCR1AL = 0xC6;
+ OCR1BH = 0x2D;
+ OCR1BL = 0xC6;
+ OCR1CH = 0x00;
+ OCR1CL = 0x00;
+ ICR1H  = 0x2D;
+ ICR1L  = 0xC6;
+ TCCR1A = 0x00;
+ TCCR1C = 0x00;
+ TCCR1B = 0x05; //start Timer
+}
+
+#pragma interrupt_handler timer1_compa_isr:iv_TIM1_COMPA
+void timer1_compa_isr(void)
+{
+ //compare occured TCNT1=OCR1A
+}
+
+//call this routine to initialize all peripherals
+void init_devices(void)
+{
+ //stop errant interrupts until set up
+ CLI(); //disable all interrupts
+ XMCRA = 0x00; //external memory
+ XMCRB = 0x00; //external memory
+ port_init();
+ timer1_init();
+
+ MCUCR  = 0x00;
+ EICRA  = 0x00; //pin change int edge 0:3
+ EICRB  = 0x00; //pin change int edge 4:7
+ PCICR  = 0x00; //pin change int enable
+ PCMSK0 = 0x00; //pin change mask
+ EIMSK  = 0x00;
+ TIMSK0 = 0x00; //timer0 interrupt sources
+ TIMSK1 = 0x02; //timer1 interrupt sources
+ TIMSK2 = 0x00; //timer2 interrupt sources
+ TIMSK3 = 0x00; //timer3 interrupt sources
+ TIMSK4 = 0x00; //timer4 interrupt sources
+ TIMSK5 = 0x00; //timer5 interrupt sources
+ 
+ SEI(); //re-enable interrupts
+ //all peripherals are now initialized
+}
+

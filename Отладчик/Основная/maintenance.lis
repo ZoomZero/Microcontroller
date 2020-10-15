@@ -1,0 +1,242 @@
+                        .module maintenance.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile maintenance.c
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\maintenance.c
+ 0000                   .dbfunc e CallLoaderL _CallLoaderL fV
+ 0000           ;              p -> R12,R13
+ 0000           ;          bytes -> R10,R11
+                        .even
+ 0000           _CallLoaderL::
+ 0000 0E940000          xcall push_xgset003C
+ 0004                   .dbline -1
+ 0004                   .dbline 12
+ 0004           ; #include <iom1284pv.h>
+ 0004           ; #include <macros.h>
+ 0004           ; 
+ 0004           ; #include "tc1.h"
+ 0004           ; #include "Uart0.h"
+ 0004           ; #include "flashaps.h"
+ 0004           ; 
+ 0004           ; #pragma global_register BufAdr:20
+ 0004           ; int BufAdr;
+ 0004           ; 
+ 0004           ; void CallLoaderL(void)
+ 0004           ; {
+ 0004                   .dbline 15
+ 0004           ;  char *p;
+ 0004           ;  int bytes;
+ 0004           ;  ArBuf[0] = (long)ArBuf;
+ 0004 80E0              ldi R24,<_ArBuf
+ 0006 90E0              ldi R25,>_ArBuf
+ 0008 1C01              movw R2,R24
+ 000A 4424              clr R4
+ 000C 5524              clr R5
+ 000E 30920100          sts _ArBuf+1,R3
+ 0012 20920000          sts _ArBuf,R2
+ 0016 50920300          sts _ArBuf+2+1,R5
+ 001A 40920200          sts _ArBuf+2,R4
+ 001E                   .dbline 16
+ 001E           ;  BufAdr = (int)ArBuf;
+ 001E 40E0              ldi R20,<_ArBuf
+ 0020 50E0              ldi R21,>_ArBuf
+ 0022                   .dbline 17
+ 0022           ;  p = (char*)ArBuf;
+ 0022 6101              movw R12,R2
+ 0024           L2:
+ 0024                   .dbline 18
+ 0024           ;  while (GetUart0Counter() < 2) ; 
+ 0024           L3:
+ 0024                   .dbline 18
+ 0024 0E940000          xcall _GetUart0Counter
+ 0028 0230              cpi R16,2
+ 002A E0F3              brlo L2
+ 002C           X0:
+ 002C                   .dbline 19
+ 002C           ;  p[2] = GetUart0Symbol(); //number of pages
+ 002C 0E940000          xcall _GetUart0Symbol
+ 0030 F601              movw R30,R12
+ 0032 0283              std z+2,R16
+ 0034                   .dbline 20
+ 0034           ;  p[3] = GetUart0Symbol(); //start page number
+ 0034 0E940000          xcall _GetUart0Symbol
+ 0038 A02E              mov R10,R16
+ 003A F601              movw R30,R12
+ 003C A382              std z+3,R10
+ 003E                   .dbline 29
+ 003E           ;  /*bytes = p[2]<<8;
+ 003E           ;  p+=4;
+ 003E           ;  while (bytes--)
+ 003E           ;  {
+ 003E           ;   while (!GetUart0Counter()) ;
+ 003E           ;   *p++ = GetUart0Symbol();
+ 003E           ;  }*/
+ 003E           ;  
+ 003E           ;  StringToUart0("LDL");
+ 003E 00E0              ldi R16,<L5
+ 0040 10E0              ldi R17,>L5
+ 0042 0E940000          xcall _StringToUart0
+ 0046                   .dbline 30
+ 0046           ;  bytes=0;
+ 0046 AA24              clr R10
+ 0048 BB24              clr R11
+ 004A           L6:
+ 004A                   .dbline 31
+ 004A           ;  while(--bytes);
+ 004A           L7:
+ 004A                   .dbline 31
+ 004A C501              movw R24,R10
+ 004C 0197              sbiw R24,1
+ 004E 6C01              movw R12,R24
+ 0050 5C01              movw R10,R24
+ 0052 8030              cpi R24,0
+ 0054 8907              cpc R24,R25
+ 0056 C9F7              brne L6
+ 0058           X1:
+ 0058                   .dbline 32
+ 0058           ;  asm("call 0x1E004");
+ 0058 0E9402F0          call 0x1E004
+ 005C                   .dbline -2
+ 005C           L1:
+ 005C                   .dbline 0 ; func end
+ 005C 0C940000          xjmp pop_xgset003C
+ 0060                   .dbsym r p 12 pc
+ 0060                   .dbsym r bytes 10 I
+ 0060                   .dbend
+ 0060                   .dbfunc e MayBeLoad _MayBeLoad fV
+                        .even
+ 0060           _MayBeLoad::
+ 0060 AA92              st -y,R10
+ 0062 BA92              st -y,R11
+ 0064                   .dbline -1
+ 0064                   .dbline 36
+ 0064           ; }
+ 0064           ; 
+ 0064           ; void MayBeLoad(void)
+ 0064           ; {
+ 0064                   .dbline 37
+ 0064           ;  if (GetUart0Symbol() != 'O') return;
+ 0064 0E940000          xcall _GetUart0Symbol
+ 0068 0F34              cpi R16,79
+ 006A 09F0              breq L10
+ 006C           X2:
+ 006C                   .dbline 37
+ 006C 10C0              xjmp L9
+ 006E           L10:
+ 006E                   .dbline 38
+ 006E           ;  if (GetUart0Symbol() != 'A') return;
+ 006E 0E940000          xcall _GetUart0Symbol
+ 0072 0134              cpi R16,65
+ 0074 09F0              breq L12
+ 0076           X3:
+ 0076                   .dbline 38
+ 0076 0BC0              xjmp L9
+ 0078           L12:
+ 0078                   .dbline 39
+ 0078           ;  switch (GetUart0Symbol())
+ 0078 0E940000          xcall _GetUart0Symbol
+ 007C A02E              mov R10,R16
+ 007E BB24              clr R11
+ 0080 C501              movw R24,R10
+ 0082 8C34              cpi R24,76
+ 0084 E0E0              ldi R30,0
+ 0086 9E07              cpc R25,R30
+ 0088 09F0              breq L17
+ 008A           X4:
+ 008A 01C0              xjmp L14
+ 008C           L17:
+ 008C                   .dbline 41
+ 008C           ;       {
+ 008C           ;               case 'L': CallLoaderL(); break;
+ 008C B9DF              xcall _CallLoaderL
+ 008E                   .dbline 41
+ 008E           L14:
+ 008E           L15:
+ 008E                   .dbline -2
+ 008E           L9:
+ 008E                   .dbline 0 ; func end
+ 008E B990              ld R11,y+
+ 0090 A990              ld R10,y+
+ 0092 0895              ret
+ 0094                   .dbend
+ 0094                   .dbfunc e CommandDc _CommandDc fV
+                        .even
+ 0094           _CommandDc::
+ 0094 AA92              st -y,R10
+ 0096 BA92              st -y,R11
+ 0098                   .dbline -1
+ 0098                   .dbline 47
+ 0098           ;               //case 'H': CallLoaderH(); break;
+ 0098           ;       } 
+ 0098           ; }
+ 0098           ; 
+ 0098           ; void CommandDc(void)
+ 0098           ; {
+ 0098                   .dbline 48
+ 0098           ;  switch (GetUart0Symbol())
+ 0098 0E940000          xcall _GetUart0Symbol
+ 009C A02E              mov R10,R16
+ 009E BB24              clr R11
+ 00A0 C501              movw R24,R10
+ 00A2 8C34              cpi R24,76
+ 00A4 E0E0              ldi R30,0
+ 00A6 9E07              cpc R25,R30
+ 00A8 A1F0              breq L22
+ 00AA           X5:
+ 00AA 8CE4              ldi R24,76
+ 00AC 8A15              cp R24,R10
+ 00AE 9B05              cpc R25,R11
+ 00B0 34F0              brlt L27
+ 00B2           X6:
+ 00B2           L26:
+ 00B2 C501              movw R24,R10
+ 00B4 8134              cpi R24,65
+ 00B6 E0E0              ldi R30,0
+ 00B8 9E07              cpc R25,R30
+ 00BA 61F0              breq L20
+ 00BC           X7:
+ 00BC 0BC0              xjmp L18
+ 00BE           L27:
+ 00BE C501              movw R24,R10
+ 00C0 8035              cpi R24,80
+ 00C2 E0E0              ldi R30,0
+ 00C4 9E07              cpc R25,R30
+ 00C6 31F0              breq L20
+ 00C8           X8:
+ 00C8 8235              cpi R24,82
+ 00CA E0E0              ldi R30,0
+ 00CC 9E07              cpc R25,R30
+ 00CE 11F0              breq L20
+ 00D0           X9:
+ 00D0 01C0              xjmp L18
+ 00D2           L22:
+ 00D2                   .dbline 50
+ 00D2           ;  {
+ 00D2           ;               case 'L': MayBeLoad(); break;
+ 00D2 C6DF              xcall _MayBeLoad
+ 00D4                   .dbline 50
+ 00D4                   .dbline 51
+ 00D4           ;               case 'P': break;
+ 00D4                   .dbline 52
+ 00D4           ;               case 'A': break;
+ 00D4                   .dbline 53
+ 00D4           ;               case 'R': break;
+ 00D4                   .dbline 54
+ 00D4           ;               default: return;
+ 00D4           L20:
+ 00D4                   .dbline -2
+ 00D4           L18:
+ 00D4                   .dbline 0 ; func end
+ 00D4 B990              ld R11,y+
+ 00D6 A990              ld R10,y+
+ 00D8 0895              ret
+ 00DA                   .dbend
+                        .area data(ram, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\maintenance.c
+ 0000           L5:
+ 0000                   .blkb 4
+                        .area idata
+ 0000 4C444C00          .byte 'L,'D,'L,0
+                        .area data(ram, con, rel)
+ 0004                   .dbfile D:\Тест2021\Отладчик\Основная\maintenance.c
+ 0004           ;  }    
+ 0004           ; }

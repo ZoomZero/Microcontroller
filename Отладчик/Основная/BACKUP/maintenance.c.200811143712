@@ -1,0 +1,32 @@
+void CallLoaderL(long * bufptr)
+{
+ char *p;
+ //asm("ldi R16, _ArBuf");
+ //asm("ldi R17, _ArBuf");
+// p = (char*)ArBuf;
+// (int*)p = ArBuf;
+   BufAdr = (int)ArBuf;
+}
+
+void MayBeLoad(char s)
+{
+ if (GetUart0Symbol() != 'o') return;
+ if (GetUart0Symbol() != 'a') return;
+ switch (GetUart0Symbol())
+ 	{
+ 		case 'L': CallLoaderL(); break;
+		//case 'H': CallLoaderH(); break;
+	} 
+}
+
+void CommandDc(void)
+{
+ switch (GetUart0Symbol())
+ {
+  		case 'L': MayBeLoad(GetUart0Symbol()); break;
+		case 'P': break;
+		case 'A': break;
+		case 'R': break;
+		default: return;
+ } 	
+}

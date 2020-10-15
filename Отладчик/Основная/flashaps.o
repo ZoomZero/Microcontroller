@@ -1,0 +1,10 @@
+XL
+H 2 areas 1 global symbols
+M flashaps.c
+A text size 0 flags 0
+dbfile flashaps.c
+A bss size 1400 flags 20
+dbfile flashaps.c
+dbfile D:\Тест2021\Отладчик\Основная\flashaps.c
+dbsym e ArBuf 0 A[5120:1280]L
+S _ArBuf Def0000

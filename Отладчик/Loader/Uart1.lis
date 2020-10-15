@@ -1,0 +1,502 @@
+                        .module Uart1.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile Uart1.c
+                        .area vector(rom, abs)
+                        .org 120
+ 0078 0C940000          jmp _uart1_tx_isr
+                        .area text(rom, con, rel)
+ 0000                   .dbfile Uart1.c
+ 0000                   .dbfile D:\Тест2021\Отладчик\Loader\Uart1.c
+ 0000                   .dbfunc e uart1_tx_isr _uart1_tx_isr fV
+                        .even
+ 0000           _uart1_tx_isr::
+ 0000                   .dbline -1
+ 0000                   .dbline 26
+ 0000           ; // Target : ATMega1284P
+ 0000           ; // Crystal: 24Mhz
+ 0000           ; 
+ 0000           ; #include <iom1284pv.h>
+ 0000           ; #include <macros.h>
+ 0000           ; 
+ 0000           ; //#include "Data.h"
+ 0000           ; #include "sisdef.h"
+ 0000           ; 
+ 0000           ; #define TransmitSize1 256
+ 0000           ; #define FIFO1Wrap (TransmitSize1-1)
+ 0000           ; 
+ 0000           ; char FIFO1[TransmitSize1];
+ 0000           ; unsigned char Read1,Write1;
+ 0000           ; unsigned char Count1;
+ 0000           ; 
+ 0000           ; #define EnableUDRE1()    UCSR1B|=0x20
+ 0000           ; #define DisableUDRE1()   UCSR1B&=~0x20 
+ 0000           ; 
+ 0000           ; #define Udr0Empty             (UCSR1A&0x20)
+ 0000           ; #define Uart0TxC              (UCSR1A&0x40)
+ 0000           ; 
+ 0000           ; 
+ 0000           ; #pragma interrupt_handler uart1_tx_isr:iv_USART1_TXC
+ 0000           ; void uart1_tx_isr(void)
+ 0000           ; {//ClrTx0En();        
+ 0000                   .dbline -2
+ 0000           L1:
+ 0000                   .dbline 0 ; func end
+ 0000 1895              reti
+ 0002                   .dbend
+                        .area vector(rom, abs)
+                        .org 116
+ 0074 0C940100          jmp _uart1_udre_isr
+                        .area text(rom, con, rel)
+ 0002                   .dbfile D:\Тест2021\Отладчик\Loader\Uart1.c
+ 0002                   .dbfunc e uart1_udre_isr _uart1_udre_isr fV
+                        .even
+ 0002           _uart1_udre_isr::
+ 0002 2A92              st -y,R2
+ 0004 3A92              st -y,R3
+ 0006 8A93              st -y,R24
+ 0008 9A93              st -y,R25
+ 000A EA93              st -y,R30
+ 000C FA93              st -y,R31
+ 000E 2FB6              IN R2,63
+ 0010 2A92              st -y,R2
+ 0012                   .dbline -1
+ 0012                   .dbline 31
+ 0012           ; }
+ 0012           ; 
+ 0012           ; #pragma interrupt_handler uart1_udre_isr:iv_USART1_UDRE
+ 0012           ; void uart1_udre_isr(void)
+ 0012           ; {//SetTx0En();
+ 0012                   .dbline 32
+ 0012           ;          UDR1=FIFO1[Read1++];
+ 0012 20900501          lds R2,_Read1
+ 0016 3324              clr R3
+ 0018 822D              mov R24,R2
+ 001A 8F5F              subi R24,255    ; addi 1
+ 001C 80930501          sts _Read1,R24
+ 0020 80E0              ldi R24,<_FIFO1
+ 0022 90E0              ldi R25,>_FIFO1
+ 0024 E22D              mov R30,R2
+ 0026 FF27              clr R31
+ 0028 E80F              add R30,R24
+ 002A F91F              adc R31,R25
+ 002C 2080              ldd R2,z+0
+ 002E 2092CE00          sts 206,R2
+ 0032                   .dbline 34
+ 0032           ;         // Read1&=FIFO1Wrap;
+ 0032           ;          if(--Count1==0) DisableUDRE1();
+ 0032 80910301          lds R24,_Count1
+ 0036 8150              subi R24,1
+ 0038 282E              mov R2,R24
+ 003A 20920301          sts _Count1,R2
+ 003E 8823              tst R24
+ 0040 29F4              brne L3
+ 0042           X0:
+ 0042                   .dbline 34
+ 0042 8091C900          lds R24,201
+ 0046 8F7D              andi R24,223
+ 0048 8093C900          sts 201,R24
+ 004C           L3:
+ 004C                   .dbline -2
+ 004C           L2:
+ 004C                   .dbline 0 ; func end
+ 004C 2990              ld R2,y+
+ 004E 2FBE              OUT 63,R2
+ 0050 F991              ld R31,y+
+ 0052 E991              ld R30,y+
+ 0054 9991              ld R25,y+
+ 0056 8991              ld R24,y+
+ 0058 3990              ld R3,y+
+ 005A 2990              ld R2,y+
+ 005C 1895              reti
+ 005E                   .dbend
+ 005E                   .dbfunc e SymbolToUart1 _SymbolToUart1 fc
+ 005E           ;              s -> R16
+                        .even
+ 005E           _SymbolToUart1::
+ 005E                   .dbline -1
+ 005E                   .dbline 38
+ 005E           ; }
+ 005E           ; 
+ 005E           ; char SymbolToUart1(char s)
+ 005E           ; {if(Count1==(TransmitSize1-1)) return 0; 
+ 005E                   .dbline 38
+ 005E 80910301          lds R24,_Count1
+ 0062 8F3F              cpi R24,255
+ 0064 11F4              brne L6
+ 0066           X1:
+ 0066                   .dbline 38
+ 0066 0027              clr R16
+ 0068 1BC0              xjmp L5
+ 006A           L6:
+ 006A                   .dbline 39
+ 006A           ;  CLI();
+ 006A F894              cli
+ 006C                   .dbline 40
+ 006C           ;                FIFO1[Write1++]=s;
+ 006C 20900401          lds R2,_Write1
+ 0070 3324              clr R3
+ 0072 822D              mov R24,R2
+ 0074 8F5F              subi R24,255    ; addi 1
+ 0076 80930401          sts _Write1,R24
+ 007A 80E0              ldi R24,<_FIFO1
+ 007C 90E0              ldi R25,>_FIFO1
+ 007E E22D              mov R30,R2
+ 0080 FF27              clr R31
+ 0082 E80F              add R30,R24
+ 0084 F91F              adc R31,R25
+ 0086 0083              std z+0,R16
+ 0088                   .dbline 41
+ 0088           ;                Count1++;      
+ 0088 80910301          lds R24,_Count1
+ 008C 8F5F              subi R24,255    ; addi 1
+ 008E 80930301          sts _Count1,R24
+ 0092                   .dbline 43
+ 0092           ;                //Write1&=FIFO1Wrap;
+ 0092           ;  EnableUDRE1();
+ 0092 8091C900          lds R24,201
+ 0096 8062              ori R24,32
+ 0098 8093C900          sts 201,R24
+ 009C                   .dbline 44
+ 009C           ;  SEI();       
+ 009C 7894              sei
+ 009E                   .dbline 45
+ 009E           ;       return 1;  }
+ 009E 01E0              ldi R16,1
+ 00A0                   .dbline -2
+ 00A0           L5:
+ 00A0                   .dbline 0 ; func end
+ 00A0 0895              ret
+ 00A2                   .dbsym r s 16 c
+ 00A2                   .dbend
+ 00A2                   .dbfunc e SymbolToUart1Gar _SymbolToUart1Gar fV
+ 00A2           ;              s -> R10
+                        .even
+ 00A2           _SymbolToUart1Gar::
+ 00A2 AA92              st -y,R10
+ 00A4 A02E              mov R10,R16
+ 00A6                   .dbline -1
+ 00A6                   .dbline 48
+ 00A6           ; 
+ 00A6           ; void SymbolToUart1Gar(char s)
+ 00A6           ; {while(!SymbolToUart1(s)); }
+ 00A6           L9:
+ 00A6                   .dbline 48
+ 00A6           L10:
+ 00A6                   .dbline 48
+ 00A6 0A2D              mov R16,R10
+ 00A8 DADF              xcall _SymbolToUart1
+ 00AA 0023              tst R16
+ 00AC E1F3              breq L9
+ 00AE           X2:
+ 00AE                   .dbline -2
+ 00AE           L8:
+ 00AE                   .dbline 0 ; func end
+ 00AE A990              ld R10,y+
+ 00B0 0895              ret
+ 00B2                   .dbsym r s 10 c
+ 00B2                   .dbend
+ 00B2                   .dbfunc e StringToUart1 _StringToUart1 fV
+ 00B2           ;            ptr -> R10,R11
+                        .even
+ 00B2           _StringToUart1::
+ 00B2 AA92              st -y,R10
+ 00B4 BA92              st -y,R11
+ 00B6 5801              movw R10,R16
+ 00B8                   .dbline -1
+ 00B8                   .dbline 51
+ 00B8           ; 
+ 00B8           ; void StringToUart1(char *ptr)
+ 00B8           ; {while(*ptr) SymbolToUart1Gar(*ptr++);
+ 00B8 04C0              xjmp L14
+ 00BA           L13:
+ 00BA                   .dbline 51
+ 00BA F501              movw R30,R10
+ 00BC 0191              ld R16,Z+
+ 00BE 5F01              movw R10,R30
+ 00C0 F0DF              xcall _SymbolToUart1Gar
+ 00C2           L14:
+ 00C2                   .dbline 51
+ 00C2 F501              movw R30,R10
+ 00C4 2080              ldd R2,z+0
+ 00C6 2220              tst R2
+ 00C8 C1F7              brne L13
+ 00CA           X3:
+ 00CA                   .dbline -2
+ 00CA           L12:
+ 00CA                   .dbline 0 ; func end
+ 00CA B990              ld R11,y+
+ 00CC A990              ld R10,y+
+ 00CE 0895              ret
+ 00D0                   .dbsym r ptr 10 pc
+ 00D0                   .dbend
+ 00D0                   .dbfunc e FlashToUart1 _FlashToUart1 fV
+ 00D0           ;            ptr -> R10,R11
+                        .even
+ 00D0           _FlashToUart1::
+ 00D0 AA92              st -y,R10
+ 00D2 BA92              st -y,R11
+ 00D4 5801              movw R10,R16
+ 00D6                   .dbline -1
+ 00D6                   .dbline 55
+ 00D6           ; }
+ 00D6           ; 
+ 00D6           ; void FlashToUart1(const char *ptr)
+ 00D6           ; {while(*ptr) SymbolToUart1Gar(*ptr++);
+ 00D6 07C0              xjmp L18
+ 00D8           L17:
+ 00D8                   .dbline 55
+ 00D8 1501              movw R2,R10
+ 00DA C101              movw R24,R2
+ 00DC 0196              adiw R24,1
+ 00DE 5C01              movw R10,R24
+ 00E0 F101              movw R30,R2
+ 00E2 0691              elpm R16,Z
+ 00E4 DEDF              xcall _SymbolToUart1Gar
+ 00E6           L18:
+ 00E6                   .dbline 55
+ 00E6 F501              movw R30,R10
+ 00E8 2690              elpm R2,Z
+ 00EA 2220              tst R2
+ 00EC A9F7              brne L17
+ 00EE           X4:
+ 00EE                   .dbline -2
+ 00EE           L16:
+ 00EE                   .dbline 0 ; func end
+ 00EE B990              ld R11,y+
+ 00F0 A990              ld R10,y+
+ 00F2 0895              ret
+ 00F4                   .dbsym r ptr 10 pkc
+ 00F4                   .dbend
+                        .area vector(rom, abs)
+                        .org 112
+ 0070 0C947A00          jmp _uart1_rx_isr
+                        .area text(rom, con, rel)
+ 00F4                   .dbfile D:\Тест2021\Отладчик\Loader\Uart1.c
+ 00F4                   .dbfunc e uart1_rx_isr _uart1_rx_isr fV
+                        .even
+ 00F4           _uart1_rx_isr::
+ 00F4 2A92              st -y,R2
+ 00F6 3A92              st -y,R3
+ 00F8 8A93              st -y,R24
+ 00FA 9A93              st -y,R25
+ 00FC EA93              st -y,R30
+ 00FE FA93              st -y,R31
+ 0100 2FB6              IN R2,63
+ 0102 2A92              st -y,R2
+ 0104                   .dbline -1
+ 0104                   .dbline 73
+ 0104           ; }
+ 0104           ; 
+ 0104           ; ///////////////////////////
+ 0104           ; //Receiver Functions   ////
+ 0104           ; ///////////////////////////
+ 0104           ; 
+ 0104           ; #define Receive1Size 256
+ 0104           ; char Uart1ReceiveBuffer[Receive1Size];
+ 0104           ; 
+ 0104           ; char Receive1Write;
+ 0104           ; char Receive1Read;
+ 0104           ; char Receive1Counter;
+ 0104           ; 
+ 0104           ; #define  Receive1BufferWrap (Receive1Size-1);
+ 0104           ; 
+ 0104           ; #pragma interrupt_handler uart1_rx_isr:iv_USART1_RXC
+ 0104           ; void uart1_rx_isr(void)
+ 0104           ; {Receive1Counter++; 
+ 0104                   .dbline 73
+ 0104 80910000          lds R24,_Receive1Counter
+ 0108 8F5F              subi R24,255    ; addi 1
+ 010A 80930000          sts _Receive1Counter,R24
+ 010E                   .dbline 74
+ 010E           ;  Uart1ReceiveBuffer[Receive1Write++]=UDR1;
+ 010E 20900200          lds R2,_Receive1Write
+ 0112 3324              clr R3
+ 0114 822D              mov R24,R2
+ 0116 8F5F              subi R24,255    ; addi 1
+ 0118 80930200          sts _Receive1Write,R24
+ 011C 80E0              ldi R24,<_Uart1ReceiveBuffer
+ 011E 90E0              ldi R25,>_Uart1ReceiveBuffer
+ 0120 E22D              mov R30,R2
+ 0122 FF27              clr R31
+ 0124 E80F              add R30,R24
+ 0126 F91F              adc R31,R25
+ 0128 2090CE00          lds R2,206
+ 012C 2082              std z+0,R2
+ 012E                   .dbline -2
+ 012E           L20:
+ 012E                   .dbline 0 ; func end
+ 012E 2990              ld R2,y+
+ 0130 2FBE              OUT 63,R2
+ 0132 F991              ld R31,y+
+ 0134 E991              ld R30,y+
+ 0136 9991              ld R25,y+
+ 0138 8991              ld R24,y+
+ 013A 3990              ld R3,y+
+ 013C 2990              ld R2,y+
+ 013E 1895              reti
+ 0140                   .dbend
+ 0140                   .dbfunc e GetUart1Counter _GetUart1Counter fc
+ 0140           ;              n -> R16
+                        .even
+ 0140           _GetUart1Counter::
+ 0140                   .dbline -1
+ 0140                   .dbline 80
+ 0140           ;  //Receive1Write&=Receive1BufferWrap;
+ 0140           ; }
+ 0140           ; 
+ 0140           ; //returns number of symbols in UART buffer 
+ 0140           ; char GetUart1Counter(void) //27 cycles
+ 0140           ; {char n;
+ 0140                   .dbline 81
+ 0140           ;  CLI(); n=Receive1Counter; SEI();
+ 0140 F894              cli
+ 0142                   .dbline 81
+ 0142 00910000          lds R16,_Receive1Counter
+ 0146                   .dbline 81
+ 0146 7894              sei
+ 0148                   .dbline 82
+ 0148           ;  return n;
+ 0148                   .dbline -2
+ 0148           L21:
+ 0148                   .dbline 0 ; func end
+ 0148 0895              ret
+ 014A                   .dbsym r n 16 c
+ 014A                   .dbend
+ 014A                   .dbfunc e ReturnUart1Symbol _ReturnUart1Symbol fV
+ 014A           ;              n -> R16
+                        .even
+ 014A           _ReturnUart1Symbol::
+ 014A                   .dbline -1
+ 014A                   .dbline 87
+ 014A           ; }
+ 014A           ; 
+ 014A           ; //Returns one (earliest) symbol from UART buffer
+ 014A           ; void ReturnUart1Symbol(char n)
+ 014A           ; { CLI();
+ 014A                   .dbline 87
+ 014A F894              cli
+ 014C                   .dbline 88
+ 014C           ;  Receive1Read-=n;  
+ 014C 20900100          lds R2,_Receive1Read
+ 0150 201A              sub R2,R16
+ 0152 20920100          sts _Receive1Read,R2
+ 0156                   .dbline 90
+ 0156           ;  //Receive1Read&=Receive1BufferWrap; 
+ 0156           ;  Receive1Counter+=n;   
+ 0156 20900000          lds R2,_Receive1Counter
+ 015A 200E              add R2,R16
+ 015C 20920000          sts _Receive1Counter,R2
+ 0160                   .dbline 91
+ 0160           ;  SEI();
+ 0160 7894              sei
+ 0162                   .dbline -2
+ 0162           L22:
+ 0162                   .dbline 0 ; func end
+ 0162 0895              ret
+ 0164                   .dbsym r n 16 c
+ 0164                   .dbend
+ 0164                   .dbfunc e GetUart1Symbol _GetUart1Symbol fc
+ 0164           ;         symbol -> R16
+                        .even
+ 0164           _GetUart1Symbol::
+ 0164                   .dbline -1
+ 0164                   .dbline 95
+ 0164           ; } 
+ 0164           ;  
+ 0164           ; char GetUart1Symbol(void) //25 cycles
+ 0164           ; {char symbol;
+ 0164                   .dbline 96
+ 0164           ;  symbol=Uart1ReceiveBuffer[Receive1Read++];
+ 0164 20900100          lds R2,_Receive1Read
+ 0168 3324              clr R3
+ 016A 822D              mov R24,R2
+ 016C 8F5F              subi R24,255    ; addi 1
+ 016E 80930100          sts _Receive1Read,R24
+ 0172 80E0              ldi R24,<_Uart1ReceiveBuffer
+ 0174 90E0              ldi R25,>_Uart1ReceiveBuffer
+ 0176 E22D              mov R30,R2
+ 0178 FF27              clr R31
+ 017A E80F              add R30,R24
+ 017C F91F              adc R31,R25
+ 017E 0081              ldd R16,z+0
+ 0180                   .dbline 98
+ 0180           ;  //Receive1Read&=Receive1BufferWrap; 
+ 0180           ;  CLI(); Receive1Counter--; SEI();
+ 0180 F894              cli
+ 0182                   .dbline 98
+ 0182 80910000          lds R24,_Receive1Counter
+ 0186 8150              subi R24,1
+ 0188 80930000          sts _Receive1Counter,R24
+ 018C                   .dbline 98
+ 018C 7894              sei
+ 018E                   .dbline 99
+ 018E           ; return symbol;
+ 018E                   .dbline -2
+ 018E           L23:
+ 018E                   .dbline 0 ; func end
+ 018E 0895              ret
+ 0190                   .dbsym r symbol 16 c
+ 0190                   .dbend
+ 0190                   .dbfunc e Uart1Init _Uart1Init fV
+                        .even
+ 0190           _Uart1Init::
+ 0190                   .dbline -1
+ 0190                   .dbline 105
+ 0190           ; }
+ 0190           ; 
+ 0190           ; /////////////////////////////////////
+ 0190           ; //UART1 initialize
+ 0190           ; void Uart1Init(void)
+ 0190           ; {UCSR1B = 0x00; //disable while setting baud rate
+ 0190                   .dbline 105
+ 0190 2224              clr R2
+ 0192 2092C900          sts 201,R2
+ 0196                   .dbline 106
+ 0196           ;  UCSR1A = 0x00; //x2
+ 0196 2092C800          sts 200,R2
+ 019A                   .dbline 107
+ 019A           ;  UCSR1C = 0x06;
+ 019A 86E0              ldi R24,6
+ 019C 8093CA00          sts 202,R24
+ 01A0                   .dbline 108
+ 01A0           ;  UBRR1 =  BaudRate; //230
+ 01A0 85E0              ldi R24,5
+ 01A2 90E0              ldi R25,0
+ 01A4 9093CD00          sts 204+1,R25
+ 01A8 8093CC00          sts 204,R24
+ 01AC                   .dbline 109
+ 01AC           ;  UCSR1B = 0xD8; //RXC + TXC
+ 01AC 88ED              ldi R24,216
+ 01AE 8093C900          sts 201,R24
+ 01B2                   .dbline -2
+ 01B2           L24:
+ 01B2                   .dbline 0 ; func end
+ 01B2 0895              ret
+ 01B4                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Loader\Uart1.c
+ 0000           _Receive1Counter::
+ 0000                   .blkb 1
+ 0001                   .dbsym e Receive1Counter _Receive1Counter c
+ 0001           _Receive1Read::
+ 0001                   .blkb 1
+ 0002                   .dbsym e Receive1Read _Receive1Read c
+ 0002           _Receive1Write::
+ 0002                   .blkb 1
+ 0003                   .dbsym e Receive1Write _Receive1Write c
+ 0003           _Uart1ReceiveBuffer::
+ 0003                   .blkb 256
+ 0103                   .dbsym e Uart1ReceiveBuffer _Uart1ReceiveBuffer A[256:256]c
+ 0103           _Count1::
+ 0103                   .blkb 1
+ 0104                   .dbsym e Count1 _Count1 c
+ 0104           _Write1::
+ 0104                   .blkb 1
+ 0105                   .dbsym e Write1 _Write1 c
+ 0105           _Read1::
+ 0105                   .blkb 1
+ 0106                   .dbsym e Read1 _Read1 c
+ 0106           _FIFO1::
+ 0106                   .blkb 256
+ 0206                   .dbsym e FIFO1 _FIFO1 A[256:256]c
+ 0206           ; }

@@ -1,0 +1,18 @@
+// Target : ATMega1284P
+// Crystal: 24Mhz
+
+#include <iom1284pv.h>
+#include <macros.h>
+
+#include "Uart0.h"
+
+const char MyName[] = "Debugger1284 by Ivan";
+
+void main(void)
+{
+ Uart0Init();
+ FlashToUart0(MyName);
+ while(1)
+ {
+ }
+}

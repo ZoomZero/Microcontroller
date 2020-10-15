@@ -1,0 +1,1035 @@
+Interrupt Vectors
+00000 940C 0053 JMP	__text_start|__start
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+0001A 940C 0242 JMP	_timer1_compa_isr   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+00024 940C 0076 JMP	_timer0_ovf_isr     
+
+
+
+
+00028 940C 01A8 JMP	_uart0_rx_isr       
+0002A 940C 012F JMP	_uart0_udre_isr     
+0002C 940C 0123 JMP	_uart0_tx_isr       
+0002E 940C 009B JMP	_ana_comp_isr       
+00030 940C 02CC JMP	_adc_isr            
+Program Code (text area)
+FILE: D:\Тест2021\Отладчик\Основная\main.c
+(0001) // Target : ATMega1284P
+(0002) // Crystal: 24Mhz
+(0003) 
+(0004) #include <iom1284pv.h>
+(0005) #include <macros.h>
+(0006) 
+(0007) #include "maintenance.h"
+(0008) #include "tc1.h"
+(0009) #include "Uart0.h"
+(0010) #include "flashaps.h"
+(0011) #include "adc.h"
+(0012) 
+(0013) const char MyName[] = "Debugger1284 by Ivan";
+(0014) 
+(0015) #define Uart0TxC (UCSR0A&0x40)
+(0016) 
+(0017) long Freq, FreqOld;
+(0018) long Frez;
+(0019) 
+(0020) #pragma interrupt_handler timer0_ovf_isr:iv_TIM0_OVF
+(0021) void timer0_ovf_isr(void)
+__text_start|__start:
+    00053 EFCF      LDI	R28,0xFF
+    00054 E4D0      LDI	R29,0x40
+    00055 BFCD      OUT	0x3D,R28
+    00056 BFDE      OUT	0x3E,R29
+    00057 51CE      SUBI	R28,0x1E
+    00058 40D0      SBCI	R29,0
+    00059 EA0A      LDI	R16,0xAA
+    0005A 8308      ST	Y,R16
+    0005B 2400      CLR	R0
+    0005C E0E5      LDI	R30,5
+    0005D E0F1      LDI	R31,1
+    0005E E117      LDI	R17,0x17
+    0005F 32EC      CPI	R30,0x2C
+    00060 07F1      CPC	R31,R17
+    00061 F011      BEQ	0x0064
+    00062 9201      ST	Z+,R0
+    00063 CFFB      RJMP	0x005F
+    00064 8300      ST	Z,R16
+    00065 EAE1      LDI	R30,0xA1
+    00066 E0F0      LDI	R31,0
+    00067 E0A0      LDI	R26,0
+    00068 E0B1      LDI	R27,1
+    00069 E010      LDI	R17,0
+    0006A E000      LDI	R16,0
+    0006B BF0B      OUT	0x3B,R16
+    0006C 3AE6      CPI	R30,0xA6
+    0006D 07F1      CPC	R31,R17
+    0006E F021      BEQ	0x0073
+    0006F 95C8      LPM
+    00070 9631      ADIW	R30,1
+    00071 920D      ST	X+,R0
+    00072 CFF9      RJMP	0x006C
+    00073 940E 0111 CALL	_main
+_exit:
+    00075 CFFF      RJMP	_exit
+_timer0_ovf_isr:
+  p                    --> R16
+    00076 930A      ST	-Y,R16
+    00077 931A      ST	-Y,R17
+    00078 938A      ST	-Y,R24
+    00079 939A      ST	-Y,R25
+    0007A 93EA      ST	-Y,R30
+    0007B 93FA      ST	-Y,R31
+    0007C B70F      IN	R16,0x3F
+    0007D 930A      ST	-Y,R16
+    0007E 9100 010D LDS	R16,Freq
+    00080 9110 010E LDS	R17,Freq+1
+    00082 5F0F      SUBI	R16,0xFF
+    00083 4F1F      SBCI	R17,0xFF
+(0022) {
+(0023)  char *p;
+(0024)  p = (char*)Freq+1;
+(0025)  *(int*)p+=1;
+    00084 01F8      MOVW	R30,R16
+    00085 8180      LD	R24,Z
+    00086 8191      LDD	R25,Z+1
+    00087 9601      ADIW	R24,1
+    00088 8391      STD	Z+1,R25
+    00089 8380      ST	Z,R24
+(0026)  p = (char*)Freq+3;
+    0008A 9100 010D LDS	R16,Freq
+    0008C 9110 010E LDS	R17,Freq+1
+    0008E 5F0D      SUBI	R16,0xFD
+    0008F 4F1F      SBCI	R17,0xFF
+(0027)  p = 0;
+    00090 2700      CLR	R16
+    00091 2711      CLR	R17
+    00092 9109      LD	R16,Y+
+    00093 BF0F      OUT	0x3F,R16
+    00094 91F9      LD	R31,Y+
+    00095 91E9      LD	R30,Y+
+    00096 9199      LD	R25,Y+
+    00097 9189      LD	R24,Y+
+    00098 9119      LD	R17,Y+
+    00099 9109      LD	R16,Y+
+    0009A 9518      RETI
+_ana_comp_isr:
+    0009B 922A      ST	-Y,R2
+    0009C 923A      ST	-Y,R3
+    0009D 924A      ST	-Y,R4
+    0009E 925A      ST	-Y,R5
+    0009F 926A      ST	-Y,R6
+    000A0 927A      ST	-Y,R7
+    000A1 928A      ST	-Y,R8
+    000A2 929A      ST	-Y,R9
+    000A3 938A      ST	-Y,R24
+    000A4 939A      ST	-Y,R25
+    000A5 93AA      ST	-Y,R26
+    000A6 93BA      ST	-Y,R27
+    000A7 93EA      ST	-Y,R30
+    000A8 93FA      ST	-Y,R31
+    000A9 B62F      IN	R2,0x3F
+    000AA 922A      ST	-Y,R2
+(0028) }
+(0029) 
+(0030) #pragma interrupt_handler ana_comp_isr:iv_ANA_COMP
+(0031) void ana_comp_isr(void)
+(0032) {
+(0033)  *(char*)(&Freq)=TCNT0;
+    000AB B426      IN	R2,0x26
+    000AC E0ED      LDI	R30,0xD
+    000AD E0F1      LDI	R31,1
+    000AE 8220      ST	Z,R2
+(0034)  Frez=Freq-FreqOld;
+    000AF 9040 010B LDS	R4,FreqOld+2
+    000B1 9050 010C LDS	R5,FreqOld+3
+    000B3 9020 0109 LDS	R2,FreqOld
+    000B5 9030 010A LDS	R3,FreqOld+1
+    000B7 9080 010F LDS	R8,Freq+2
+    000B9 9090 0110 LDS	R9,Freq+3
+    000BB 9060 010D LDS	R6,Freq
+    000BD 9070 010E LDS	R7,Freq+1
+    000BF 1862      SUB	R6,R2
+    000C0 0873      SBC	R7,R3
+    000C1 0884      SBC	R8,R4
+    000C2 0895      SBC	R9,R5
+    000C3 9270 0106 STS	Frez+1,R7
+    000C5 9260 0105 STS	Frez,R6
+    000C7 9290 0108 STS	Frez+3,R9
+    000C9 9280 0107 STS	Frez+2,R8
+(0035)  if(Frez>0xFFFE) Frez=0xFFFE;
+    000CB EF8E      LDI	R24,0xFE
+    000CC EF9F      LDI	R25,0xFF
+    000CD E0A0      LDI	R26,0
+    000CE E0B0      LDI	R27,0
+    000CF 1586      CP	R24,R6
+    000D0 0597      CPC	R25,R7
+    000D1 05A8      CPC	R26,R8
+    000D2 05B9      CPC	R27,R9
+    000D3 F45C      BGE	0x00DF
+    000D4 EF8E      LDI	R24,0xFE
+    000D5 9380 0105 STS	Frez,R24
+    000D7 EF8F      LDI	R24,0xFF
+    000D8 9380 0106 STS	Frez+1,R24
+    000DA E080      LDI	R24,0
+    000DB 9380 0107 STS	Frez+2,R24
+    000DD 9380 0108 STS	Frez+3,R24
+(0036)  FreqOld = Freq;
+    000DF 9040 010F LDS	R4,Freq+2
+    000E1 9050 0110 LDS	R5,Freq+3
+    000E3 9020 010D LDS	R2,Freq
+    000E5 9030 010E LDS	R3,Freq+1
+    000E7 9230 010A STS	FreqOld+1,R3
+    000E9 9220 0109 STS	FreqOld,R2
+    000EB 9250 010C STS	FreqOld+3,R5
+    000ED 9240 010B STS	FreqOld+2,R4
+    000EF 9029      LD	R2,Y+
+    000F0 BE2F      OUT	0x3F,R2
+    000F1 91F9      LD	R31,Y+
+    000F2 91E9      LD	R30,Y+
+    000F3 91B9      LD	R27,Y+
+    000F4 91A9      LD	R26,Y+
+    000F5 9199      LD	R25,Y+
+    000F6 9189      LD	R24,Y+
+    000F7 9099      LD	R9,Y+
+    000F8 9089      LD	R8,Y+
+    000F9 9079      LD	R7,Y+
+    000FA 9069      LD	R6,Y+
+    000FB 9059      LD	R5,Y+
+    000FC 9049      LD	R4,Y+
+    000FD 9039      LD	R3,Y+
+    000FE 9029      LD	R2,Y+
+    000FF 9518      RETI
+(0037)  
+(0038) }
+(0039) 
+(0040) void comparator_init(void)
+(0041) {
+(0042)  ACSR = ACSR & 0xF7; //ensure interrupt is off before changing
+_comparator_init:
+    00100 B780      IN	R24,0x30
+    00101 7F87      ANDI	R24,0xF7
+    00102 BF80      OUT	0x30,R24
+(0043)  ACSR = 0x0F;
+    00103 E08F      LDI	R24,0xF
+    00104 BF80      OUT	0x30,R24
+    00105 9508      RET
+(0044) }
+(0045) 
+(0046) void timer0_init(void)
+(0047) {
+(0048)  TCCR0B = 0x00; //stop
+_timer0_init:
+    00106 2422      CLR	R2
+    00107 BC25      OUT	0x25,R2
+(0049)  TCNT0 = 0x00 /*INVALID SETTING*/; //set count
+    00108 BC26      OUT	0x26,R2
+(0050)  OCR0A  = 0x00 /*INVALID SETTING*/;
+    00109 BC27      OUT	0x27,R2
+(0051)  TCCR0A = 0x00; //start timer
+    0010A BC24      OUT	0x24,R2
+(0052)  TCCR0B = 0x04; //start timer
+    0010B E084      LDI	R24,4
+    0010C BD85      OUT	0x25,R24
+(0053)  TIMSK0 = 0x01; //timer0 interrupt sources
+    0010D E081      LDI	R24,1
+    0010E 9380 006E STS	0x6E,R24
+    00110 9508      RET
+(0054) }
+(0055) 
+(0056) void main(void)
+(0057) {
+(0058)  //CallLoaderL(ArBuf);
+(0059)  DDRA = 0; //port to enter
+_main:
+    00111 2422      CLR	R2
+    00112 B821      OUT	0x01,R2
+(0060)  Uart0Init();
+    00113 940E 0217 CALL	_Uart0Init
+(0061)  timer0_init();
+    00115 DFF0      RCALL	_timer0_init
+(0062)  comparator_init();
+    00116 DFE9      RCALL	_comparator_init
+(0063)  adc_init();
+    00117 940E 02B9 CALL	_adc_init
+    00119 C007      RJMP	0x0121
+(0064)  //InitTimer1();
+(0065)  //FlashToUart0(MyName);
+(0066)  //CLI();
+(0067)  while(1)
+(0068)  {
+(0069)   //if (Tc1Flag) break;
+(0070)   if (GetUart0Counter() > 3) CommandDc(); 
+(0071)  }
+(0072)  //T = 400000L;
+(0073)  //while (--T) ;
+(0074)  asm("jmp 0x1E000");
+(0075)  //StringToUart0("TxComplete");
+(0076) }
+FILE: D:\Тест2021\Отладчик\Основная\Uart0.c
+(0001) // Target : ATMega1284P
+(0002) // Crystal: 24Mhz
+(0003) 
+(0004) #include <iom1284pv.h>
+(0005) #include <macros.h>
+(0006) 
+(0007) //#include "FlashAbs.h"
+(0008) #include "sisdef.h"
+(0009) 
+(0010) 
+(0011) #define TransmitSize0 256
+(0012) #define FIFO0Wrap (TransmitSize0-1)
+(0013) 
+(0014) char FIFO0[TransmitSize0];
+(0015) unsigned char Read0, Write0;
+(0016) unsigned char Count0;
+(0017) 
+(0018) #define EnableUDRE0()    UCSR0B|=0x20
+(0019) #define DisableUDRE0()   UCSR0B&=~0x20 
+(0020) 
+(0021) #define SetTx0En()		PORTA|=0x02 
+(0022) #define ClrTx0En()		PORTA&=~0x02
+(0023) #define Tx0En			(PORTA&0x02) 
+(0024) 
+(0025) #define Udr0Empty		(UCSR0A&0x20)
+(0026) #define Uart0TxC		(UCSR0A&0x40)
+(0027) 
+(0028) char TxCFlag;
+(0029) #define SetTxC() TxCFlag |= 1
+(0030) #define ClrTxC() TxCFlag &= ~1
+(0031) 
+(0032) #pragma interrupt_handler uart0_tx_isr:iv_USART0_TXC
+(0033) void uart0_tx_isr(void)
+    0011A 940E 01D4 CALL	_GetUart0Counter
+    0011C E083      LDI	R24,3
+    0011D 1780      CP	R24,R16
+    0011E F410      BCC	0x0121
+    0011F 940E 0296 CALL	_CommandDc
+    00121 CFF8      RJMP	0x011A
+    00122 9508      RET
+_uart0_tx_isr:
+    00123 938A      ST	-Y,R24
+    00124 B78F      IN	R24,0x3F
+    00125 938A      ST	-Y,R24
+    00126 9180 0217 LDS	R24,TxCFlag
+    00128 6081      ORI	R24,1
+    00129 9380 0217 STS	TxCFlag,R24
+    0012B 9189      LD	R24,Y+
+    0012C BF8F      OUT	0x3F,R24
+    0012D 9189      LD	R24,Y+
+    0012E 9518      RETI
+_uart0_udre_isr:
+    0012F 922A      ST	-Y,R2
+    00130 923A      ST	-Y,R3
+    00131 938A      ST	-Y,R24
+    00132 939A      ST	-Y,R25
+    00133 93EA      ST	-Y,R30
+    00134 93FA      ST	-Y,R31
+    00135 B62F      IN	R2,0x3F
+    00136 922A      ST	-Y,R2
+(0034) {//ClrTx0En();	
+(0035) 	SetTxC();
+(0036) }
+(0037) 
+(0038) #pragma interrupt_handler uart0_udre_isr:iv_USART0_UDRE
+(0039) void uart0_udre_isr(void)
+(0040) {//SetTx0En();
+(0041)  	   UDR0=FIFO0[Read0++];
+    00137 9020 021A LDS	R2,Read0
+    00139 2433      CLR	R3
+    0013A 2D82      MOV	R24,R2
+    0013B 5F8F      SUBI	R24,0xFF
+    0013C 9380 021A STS	Read0,R24
+    0013E E18B      LDI	R24,0x1B
+    0013F E092      LDI	R25,2
+    00140 2DE2      MOV	R30,R2
+    00141 27FF      CLR	R31
+    00142 0FE8      ADD	R30,R24
+    00143 1FF9      ADC	R31,R25
+    00144 8020      LD	R2,Z
+    00145 9220 00C6 STS	0xC6,R2
+(0042) 	   //Read0&=FIFO0Wrap;
+(0043) 	   if(--Count0==0) DisableUDRE0();
+    00147 9180 0218 LDS	R24,Count0
+    00149 5081      SUBI	R24,1
+    0014A 2E28      MOV	R2,R24
+    0014B 9220 0218 STS	Count0,R2
+    0014D 2388      TST	R24
+    0014E F429      BNE	0x0154
+    0014F 9180 00C1 LDS	R24,0xC1
+    00151 7D8F      ANDI	R24,0xDF
+    00152 9380 00C1 STS	0xC1,R24
+    00154 9029      LD	R2,Y+
+    00155 BE2F      OUT	0x3F,R2
+    00156 91F9      LD	R31,Y+
+    00157 91E9      LD	R30,Y+
+    00158 9199      LD	R25,Y+
+    00159 9189      LD	R24,Y+
+    0015A 9039      LD	R3,Y+
+    0015B 9029      LD	R2,Y+
+    0015C 9518      RETI
+(0044) }
+(0045) 
+(0046) char SymbolToUart0(char s)
+(0047) {if(Count0 == (TransmitSize0 - 1)) return 0; 
+_SymbolToUart0:
+  s                    --> R16
+    0015D 9180 0218 LDS	R24,Count0
+    0015F 3F8F      CPI	R24,0xFF
+    00160 F411      BNE	0x0163
+    00161 2700      CLR	R16
+    00162 C01B      RJMP	0x017E
+(0048)  CLI();
+    00163 94F8      BCLR	7
+(0049) 		 FIFO0[Write0++]=s;
+    00164 9020 0219 LDS	R2,Write0
+    00166 2433      CLR	R3
+    00167 2D82      MOV	R24,R2
+    00168 5F8F      SUBI	R24,0xFF
+    00169 9380 0219 STS	Write0,R24
+    0016B E18B      LDI	R24,0x1B
+    0016C E092      LDI	R25,2
+    0016D 2DE2      MOV	R30,R2
+    0016E 27FF      CLR	R31
+    0016F 0FE8      ADD	R30,R24
+    00170 1FF9      ADC	R31,R25
+    00171 8300      ST	Z,R16
+(0050) 		 Count0++;	
+    00172 9180 0218 LDS	R24,Count0
+    00174 5F8F      SUBI	R24,0xFF
+    00175 9380 0218 STS	Count0,R24
+(0051) 		 //Write0&=FIFO0Wrap;
+(0052)  EnableUDRE0();
+    00177 9180 00C1 LDS	R24,0xC1
+    00179 6280      ORI	R24,0x20
+    0017A 9380 00C1 STS	0xC1,R24
+(0053)  SEI();	
+    0017C 9478      BSET	7
+(0054) 	return 1;  }
+    0017D E001      LDI	R16,1
+    0017E 9508      RET
+_SymbolToUart0Gar:
+  s                    --> R10
+    0017F 92AA      ST	-Y,R10
+    00180 2EA0      MOV	R10,R16
+(0055) 
+(0056) void SymbolToUart0Gar(char s)
+(0057) {while(!SymbolToUart0(s)); }
+    00181 2D0A      MOV	R16,R10
+    00182 DFDA      RCALL	_SymbolToUart0
+    00183 2300      TST	R16
+    00184 F3E1      BEQ	0x0181
+    00185 90A9      LD	R10,Y+
+    00186 9508      RET
+_StringToUart0:
+  ptr                  --> R10
+    00187 92AA      ST	-Y,R10
+    00188 92BA      ST	-Y,R11
+    00189 0158      MOVW	R10,R16
+(0058) 
+(0059) void StringToUart0(char *ptr)
+(0060) {while(*ptr) SymbolToUart0Gar(*ptr++);
+    0018A C004      RJMP	0x018F
+    0018B 01F5      MOVW	R30,R10
+    0018C 9101      LD	R16,Z+
+    0018D 015F      MOVW	R10,R30
+    0018E DFF0      RCALL	_SymbolToUart0Gar
+    0018F 01F5      MOVW	R30,R10
+    00190 8020      LD	R2,Z
+    00191 2022      TST	R2
+    00192 F7C1      BNE	0x018B
+    00193 90B9      LD	R11,Y+
+    00194 90A9      LD	R10,Y+
+    00195 9508      RET
+_FlashToUart0:
+  ptr                  --> R10
+    00196 92AA      ST	-Y,R10
+    00197 92BA      ST	-Y,R11
+    00198 0158      MOVW	R10,R16
+(0061) }
+(0062) 
+(0063) void FlashToUart0(const char *ptr)
+(0064) {while(*ptr) SymbolToUart0Gar(*ptr++);
+    00199 C007      RJMP	0x01A1
+    0019A 0115      MOVW	R2,R10
+    0019B 01C1      MOVW	R24,R2
+    0019C 9601      ADIW	R24,1
+    0019D 015C      MOVW	R10,R24
+    0019E 01F1      MOVW	R30,R2
+    0019F 9106      ELPM	R16,Z
+    001A0 DFDE      RCALL	_SymbolToUart0Gar
+    001A1 01F5      MOVW	R30,R10
+    001A2 9026      ELPM	R2,Z
+    001A3 2022      TST	R2
+    001A4 F7A9      BNE	0x019A
+    001A5 90B9      LD	R11,Y+
+    001A6 90A9      LD	R10,Y+
+    001A7 9508      RET
+_uart0_rx_isr:
+    001A8 922A      ST	-Y,R2
+    001A9 923A      ST	-Y,R3
+    001AA 938A      ST	-Y,R24
+    001AB 939A      ST	-Y,R25
+    001AC 93EA      ST	-Y,R30
+    001AD 93FA      ST	-Y,R31
+    001AE B62F      IN	R2,0x3F
+    001AF 922A      ST	-Y,R2
+(0065) }
+(0066) 
+(0067) ///////////////////////////
+(0068) //Receiver Functions   ////
+(0069) ///////////////////////////
+(0070) 
+(0071) //Constant and variable block for UART receiver functions
+(0072) 
+(0073) #define Receive0Size 256
+(0074) char Uart0ReceiveBuffer[Receive0Size];
+(0075) 
+(0076) int Receive0Write;
+(0077) int Receive0Read;
+(0078) int Receive0Counter;
+(0079) 
+(0080) //int Receive0BufferWrap= (Receive0Size-1);
+(0081) 
+(0082) #pragma interrupt_handler uart0_rx_isr:iv_USART0_RXC
+(0083) void uart0_rx_isr(void)
+(0084) {Receive0Counter++; 
+    001B0 9180 0111 LDS	R24,Receive0Counter
+    001B2 9190 0112 LDS	R25,Receive0Counter+1
+    001B4 9601      ADIW	R24,1
+    001B5 9390 0112 STS	Receive0Counter+1,R25
+    001B7 9380 0111 STS	Receive0Counter,R24
+(0085)  Uart0ReceiveBuffer[Receive0Write++]=UDR0;
+    001B9 9020 0115 LDS	R2,Receive0Write
+    001BB 9030 0116 LDS	R3,Receive0Write+1
+    001BD 01C1      MOVW	R24,R2
+    001BE 9601      ADIW	R24,1
+    001BF 9390 0116 STS	Receive0Write+1,R25
+    001C1 9380 0115 STS	Receive0Write,R24
+    001C3 E187      LDI	R24,0x17
+    001C4 E091      LDI	R25,1
+    001C5 01F1      MOVW	R30,R2
+    001C6 0FE8      ADD	R30,R24
+    001C7 1FF9      ADC	R31,R25
+    001C8 9020 00C6 LDS	R2,0xC6
+    001CA 8220      ST	Z,R2
+    001CB 9029      LD	R2,Y+
+    001CC BE2F      OUT	0x3F,R2
+    001CD 91F9      LD	R31,Y+
+    001CE 91E9      LD	R30,Y+
+    001CF 9199      LD	R25,Y+
+    001D0 9189      LD	R24,Y+
+    001D1 9039      LD	R3,Y+
+    001D2 9029      LD	R2,Y+
+    001D3 9518      RETI
+(0086)  //Receive0Write&=Receive0BufferWrap;
+(0087) }
+(0088) 
+(0089) //returns number of symbols in UART buffer 
+(0090) int GetUart0Counter(void) //27 cycles
+(0091) {int n;
+(0092)  CLI(); n=Receive0Counter; SEI();
+_GetUart0Counter:
+  n                    --> R16
+    001D4 94F8      BCLR	7
+    001D5 9100 0111 LDS	R16,Receive0Counter
+    001D7 9110 0112 LDS	R17,Receive0Counter+1
+    001D9 9478      BSET	7
+(0093)  return n;
+    001DA 9508      RET
+(0094) }
+(0095) 
+(0096) //Returns one (earliest) symbol from UART buffer
+(0097) void ReturnUart0Symbol(int n)
+(0098) { CLI();
+_ReturnUart0Symbol:
+  n                    --> R16
+    001DB 94F8      BCLR	7
+(0099)  Receive0Read-=n;  
+    001DC 9020 0113 LDS	R2,Receive0Read
+    001DE 9030 0114 LDS	R3,Receive0Read+1
+    001E0 1A20      SUB	R2,R16
+    001E1 0A31      SBC	R3,R17
+    001E2 9230 0114 STS	Receive0Read+1,R3
+    001E4 9220 0113 STS	Receive0Read,R2
+(0100)  //Receive0Read&=Receive0BufferWrap; 
+(0101)   Receive0Counter+=n; 
+    001E6 9020 0111 LDS	R2,Receive0Counter
+    001E8 9030 0112 LDS	R3,Receive0Counter+1
+    001EA 0E20      ADD	R2,R16
+    001EB 1E31      ADC	R3,R17
+    001EC 9230 0112 STS	Receive0Counter+1,R3
+    001EE 9220 0111 STS	Receive0Counter,R2
+(0102)   
+(0103)   SEI();
+    001F0 9478      BSET	7
+    001F1 9508      RET
+(0104) } 
+(0105)  
+(0106) char GetUart0Symbol(void) //25 cycles
+(0107) {char symbol;
+(0108)  symbol=Uart0ReceiveBuffer[Receive0Read++];
+_GetUart0Symbol:
+  symbol               --> R16
+    001F2 9020 0113 LDS	R2,Receive0Read
+    001F4 9030 0114 LDS	R3,Receive0Read+1
+    001F6 01C1      MOVW	R24,R2
+    001F7 9601      ADIW	R24,1
+    001F8 9390 0114 STS	Receive0Read+1,R25
+    001FA 9380 0113 STS	Receive0Read,R24
+    001FC E187      LDI	R24,0x17
+    001FD E091      LDI	R25,1
+    001FE 01F1      MOVW	R30,R2
+    001FF 0FE8      ADD	R30,R24
+    00200 1FF9      ADC	R31,R25
+    00201 8100      LD	R16,Z
+(0109)  //Receive0Read&=Receive0BufferWrap; 
+(0110)  CLI(); Receive0Counter--; SEI();
+    00202 94F8      BCLR	7
+    00203 9180 0111 LDS	R24,Receive0Counter
+    00205 9190 0112 LDS	R25,Receive0Counter+1
+    00207 9701      SBIW	R24,1
+    00208 9390 0112 STS	Receive0Counter+1,R25
+    0020A 9380 0111 STS	Receive0Counter,R24
+    0020C 9478      BSET	7
+(0111) return symbol;
+    0020D 9508      RET
+(0112) }
+(0113) 
+(0114) char GetNextUartSym(void)
+(0115) {while(!Receive0Counter) ;
+_GetNextUartSym:
+    0020E 9020 0111 LDS	R2,Receive0Counter
+    00210 9030 0112 LDS	R3,Receive0Counter+1
+    00212 2022      TST	R2
+    00213 F411      BNE	0x0216
+    00214 2033      TST	R3
+    00215 F3C1      BEQ	0x020E
+(0116)  return GetUart0Symbol();
+    00216 CFDB      RJMP	_GetUart0Symbol
+(0117) }
+(0118) 
+(0119) /////////////////////////////////////
+(0120) //UART0 initialize
+(0121) 
+(0122) // char size: 8 bit
+(0123) // parity: Disabled
+(0124) //ubrr=7 115200
+(0125) //ubrr=1 460800
+(0126) //ubrr=0 021600
+(0127) void Uart0Init(void)
+(0128) {UCSR0B = 0x00; //disable while setting baud rate
+_Uart0Init:
+    00217 2422      CLR	R2
+    00218 9220 00C1 STS	0xC1,R2
+(0129)  UCSR0A = 0x00; //x2
+    0021A 9220 00C0 STS	0xC0,R2
+(0130)  UCSR0C = 0x06;
+    0021C E086      LDI	R24,6
+    0021D 9380 00C2 STS	0xC2,R24
+(0131)  
+(0132)  UBRR0 = BaudRate;
+    0021F E085      LDI	R24,5
+    00220 E090      LDI	R25,0
+    00221 9390 00C5 STS	0xC5,R25
+    00223 9380 00C4 STS	0xC4,R24
+(0133)  /*if(PINB&0x40) UBRR0 = BaudRate;
+(0134)  else		   UBRR0 = 7;  //115200*/
+(0135)  UCSR0B = 0xD8; //RXC + TXC
+(0136) }
+(0137) 
+FILE: D:\Тест2021\Отладчик\Основная\tc1.c
+(0001) //ICC-AVR application builder : 10.08.2020 14:59:46
+(0002) // Target : m1281
+(0003) // Crystal: 12.000Mhz
+(0004) 
+(0005) #include <iom1284pv.h>
+(0006) #include <macros.h>
+(0007) 
+(0008) char Tc1Flag;
+(0009) 
+(0010) //TIMER1 initialize - prescale:1024
+(0011) // WGM: 0) Normal, TOP=0xFFFF
+(0012) // desired value: 1Sec
+(0013) // actual value:  1,000Sec (0,0%)
+(0014) void InitTimer1(void)
+    00225 ED88      LDI	R24,0xD8
+    00226 9380 00C1 STS	0xC1,R24
+    00228 9508      RET
+_InitTimer1:
+    00229 2422      CLR	R2
+    0022A 2433      CLR	R3
+    0022B 9230 0085 STS	0x85,R3
+    0022D 9220 0084 STS	0x84,R2
+(0015) {
+(0016)  TCNT1 = 0;
+(0017)  TCCR1B = 0x00; //stop
+    0022F 9220 0081 STS	0x81,R2
+(0018)  OCR1A = 0x2DC6;
+    00231 EC86      LDI	R24,0xC6
+    00232 E29D      LDI	R25,0x2D
+    00233 9390 0089 STS	0x89,R25
+    00235 9380 0088 STS	0x88,R24
+(0019)  TCCR1A = 0x00;
+    00237 9220 0080 STS	0x80,R2
+(0020)  TCCR1C = 0x00;
+    00239 9220 0082 STS	0x82,R2
+(0021)  TCCR1B = 0x05; //start Timer
+    0023B E085      LDI	R24,5
+    0023C 9380 0081 STS	0x81,R24
+(0022)  TIMSK1 = 0x02; //timer1 interrupt sources
+    0023E E082      LDI	R24,2
+    0023F 9380 006F STS	0x6F,R24
+    00241 9508      RET
+_timer1_compa_isr:
+    00242 938A      ST	-Y,R24
+    00243 B78F      IN	R24,0x3F
+    00244 938A      ST	-Y,R24
+(0023) }
+(0024) 
+(0025) #pragma interrupt_handler timer1_compa_isr:iv_TIM1_COMPA
+(0026) void timer1_compa_isr(void)
+(0027) {
+(0028)  Tc1Flag = 1;
+(0029)  //compare occured TCNT1=OCR1A
+(0030) }
+(0031) 
+(0032) 
+FILE: D:\Тест2021\Отладчик\Основная\maintenance.c
+(0001) #include <iom1284pv.h>
+(0002) #include <macros.h>
+(0003) 
+(0004) #include "tc1.h"
+(0005) #include "Uart0.h"
+(0006) #include "flashaps.h"
+(0007) 
+(0008) #pragma global_register BufAdr:20
+(0009) int BufAdr;
+(0010) 
+(0011) void CallLoaderL(void)
+    00245 E081      LDI	R24,1
+    00246 9380 031B STS	Tc1Flag,R24
+    00248 9189      LD	R24,Y+
+    00249 BF8F      OUT	0x3F,R24
+    0024A 9189      LD	R24,Y+
+    0024B 9518      RETI
+_CallLoaderL:
+  p                    --> R12
+  bytes                --> R10
+    0024C 940E 030A CALL	push_xgset003C
+    0024E E18C      LDI	R24,0x1C
+    0024F E093      LDI	R25,3
+    00250 011C      MOVW	R2,R24
+    00251 2444      CLR	R4
+    00252 2455      CLR	R5
+    00253 9230 031D STS	ArBuf+1,R3
+    00255 9220 031C STS	ArBuf,R2
+    00257 9250 031F STS	ArBuf+3,R5
+    00259 9240 031E STS	ArBuf+2,R4
+(0012) {
+(0013)  char *p;
+(0014)  int bytes;
+(0015)  ArBuf[0] = (long)ArBuf;
+(0016)  BufAdr = (int)ArBuf;
+    0025B E14C      LDI	R20,0x1C
+    0025C E053      LDI	R21,3
+(0017)  p = (char*)ArBuf;
+    0025D 0161      MOVW	R12,R2
+(0018)  while (GetUart0Counter() < 2) ; 
+    0025E 940E 01D4 CALL	_GetUart0Counter
+    00260 3002      CPI	R16,2
+    00261 F3E0      BCS	0x025E
+(0019)  p[2] = GetUart0Symbol(); //number of pages
+    00262 940E 01F2 CALL	_GetUart0Symbol
+    00264 01F6      MOVW	R30,R12
+    00265 8302      STD	Z+2,R16
+(0020)  p[3] = GetUart0Symbol(); //start page number
+    00266 940E 01F2 CALL	_GetUart0Symbol
+    00268 2EA0      MOV	R10,R16
+    00269 01F6      MOVW	R30,R12
+    0026A 82A3      STD	Z+3,R10
+(0021)  /*bytes = p[2]<<8;
+(0022)  p+=4;
+(0023)  while (bytes--)
+(0024)  {
+(0025)   while (!GetUart0Counter()) ;
+(0026)   *p++ = GetUart0Symbol();
+(0027)  }*/
+(0028)  
+(0029)  StringToUart0("LDL");
+    0026B E000      LDI	R16,0
+    0026C E011      LDI	R17,1
+    0026D 940E 0187 CALL	_StringToUart0
+(0030)  bytes=0;
+    0026F 24AA      CLR	R10
+    00270 24BB      CLR	R11
+(0031)  while(--bytes);
+    00271 01C5      MOVW	R24,R10
+    00272 9701      SBIW	R24,1
+    00273 016C      MOVW	R12,R24
+    00274 015C      MOVW	R10,R24
+    00275 3080      CPI	R24,0
+    00276 0789      CPC	R24,R25
+    00277 F7C9      BNE	0x0271
+(0032)  asm("call 0x1E004");
+    00278 940E F002 CALL	0xF002
+    0027A 940C 02FF JMP	pop_xgset003C
+_MayBeLoad:
+    0027C 92AA      ST	-Y,R10
+    0027D 92BA      ST	-Y,R11
+(0033) }
+(0034) 
+(0035) void MayBeLoad(void)
+(0036) {
+(0037)  if (GetUart0Symbol() != 'O') return;
+    0027E 940E 01F2 CALL	_GetUart0Symbol
+    00280 340F      CPI	R16,0x4F
+    00281 F009      BEQ	0x0283
+    00282 C010      RJMP	0x0293
+(0038)  if (GetUart0Symbol() != 'A') return;
+    00283 940E 01F2 CALL	_GetUart0Symbol
+    00285 3401      CPI	R16,0x41
+    00286 F009      BEQ	0x0288
+    00287 C00B      RJMP	0x0293
+(0039)  switch (GetUart0Symbol())
+    00288 940E 01F2 CALL	_GetUart0Symbol
+    0028A 2EA0      MOV	R10,R16
+    0028B 24BB      CLR	R11
+    0028C 01C5      MOVW	R24,R10
+    0028D 348C      CPI	R24,0x4C
+    0028E E0E0      LDI	R30,0
+    0028F 079E      CPC	R25,R30
+    00290 F009      BEQ	0x0292
+    00291 C001      RJMP	0x0293
+(0040)  	{
+(0041)  		case 'L': CallLoaderL(); break;
+    00292 DFB9      RCALL	_CallLoaderL
+    00293 90B9      LD	R11,Y+
+    00294 90A9      LD	R10,Y+
+    00295 9508      RET
+_CommandDc:
+    00296 92AA      ST	-Y,R10
+    00297 92BA      ST	-Y,R11
+(0042) 		//case 'H': CallLoaderH(); break;
+(0043) 	} 
+(0044) }
+(0045) 
+(0046) void CommandDc(void)
+(0047) {
+(0048)  switch (GetUart0Symbol())
+    00298 940E 01F2 CALL	_GetUart0Symbol
+    0029A 2EA0      MOV	R10,R16
+    0029B 24BB      CLR	R11
+    0029C 01C5      MOVW	R24,R10
+    0029D 348C      CPI	R24,0x4C
+    0029E E0E0      LDI	R30,0
+    0029F 079E      CPC	R25,R30
+    002A0 F0A1      BEQ	0x02B5
+    002A1 E48C      LDI	R24,0x4C
+    002A2 158A      CP	R24,R10
+    002A3 059B      CPC	R25,R11
+    002A4 F034      BLT	0x02AB
+    002A5 01C5      MOVW	R24,R10
+    002A6 3481      CPI	R24,0x41
+    002A7 E0E0      LDI	R30,0
+    002A8 079E      CPC	R25,R30
+    002A9 F061      BEQ	0x02B6
+    002AA C00B      RJMP	0x02B6
+    002AB 01C5      MOVW	R24,R10
+    002AC 3580      CPI	R24,0x50
+    002AD E0E0      LDI	R30,0
+    002AE 079E      CPC	R25,R30
+    002AF F031      BEQ	0x02B6
+    002B0 3582      CPI	R24,0x52
+    002B1 E0E0      LDI	R30,0
+    002B2 079E      CPC	R25,R30
+    002B3 F011      BEQ	0x02B6
+    002B4 C001      RJMP	0x02B6
+(0049)  {
+(0050)   		case 'L': MayBeLoad(); break;
+    002B5 DFC6      RCALL	_MayBeLoad
+(0051) 		case 'P': break;
+(0052) 		case 'A': break;
+(0053) 		case 'R': break;
+(0054) 		default: return;
+(0055)  } 	
+(0056) }
+FILE: D:\Тест2021\Отладчик\Основная\adc.c
+(0001) // Target : ATMega1284P
+(0002) // Crystal: 24Mhz
+(0003) 
+(0004) #include <iom1284pv.h>
+(0005) #include <macros.h>
+(0006) 
+(0007) #define Vcc 0x40
+(0008) #define Ref11 0x80
+(0009) #define Ref256 0xC0
+(0010) #define StartConv() ADCSRA  |= 0x40
+(0011) 
+(0012) int AdcBuf[8];
+(0013) char ChNum = 0;
+(0014) 
+(0015) //ADC initialize
+(0016) // Conversion time: 138uS
+(0017) void adc_init(void)
+    002B6 90B9      LD	R11,Y+
+    002B7 90A9      LD	R10,Y+
+    002B8 9508      RET
+_adc_init:
+    002B9 2422      CLR	R2
+    002BA 9220 007A STS	0x7A,R2
+(0018) {
+(0019)  ADCSRA = 0x00; //disable adc
+(0020)  ADMUX  =  ChNum + Vcc; //select adc input 0
+    002BC 9180 0104 LDS	R24,ChNum
+    002BE 5C80      SUBI	R24,0xC0
+    002BF 9380 007C STS	0x7C,R24
+(0021)  ACSR   = 0x80;
+    002C1 E880      LDI	R24,0x80
+    002C2 BF80      OUT	0x30,R24
+(0022)  ADCSRA = 0x8F;
+    002C3 E88F      LDI	R24,0x8F
+    002C4 9380 007A STS	0x7A,R24
+(0023)  StartConv();
+    002C6 9180 007A LDS	R24,0x7A
+    002C8 6480      ORI	R24,0x40
+    002C9 9380 007A STS	0x7A,R24
+    002CB 9508      RET
+_adc_isr:
+    002CC 922A      ST	-Y,R2
+    002CD 923A      ST	-Y,R3
+    002CE 938A      ST	-Y,R24
+    002CF 939A      ST	-Y,R25
+    002D0 93EA      ST	-Y,R30
+    002D1 93FA      ST	-Y,R31
+    002D2 B62F      IN	R2,0x3F
+    002D3 922A      ST	-Y,R2
+(0024) }
+(0025) 
+(0026) #pragma interrupt_handler adc_isr:iv_ADC
+(0027) void adc_isr(void)
+(0028) {
+(0029)  AdcBuf[ChNum++] = ADC;
+    002D4 9020 0104 LDS	R2,ChNum
+    002D6 2433      CLR	R3
+    002D7 2D82      MOV	R24,R2
+    002D8 5F8F      SUBI	R24,0xFF
+    002D9 9380 0104 STS	ChNum,R24
+    002DB E18C      LDI	R24,0x1C
+    002DC E197      LDI	R25,0x17
+    002DD 2DE2      MOV	R30,R2
+    002DE 27FF      CLR	R31
+    002DF 0FEE      LSL	R30
+    002E0 1FFF      ROL	R31
+    002E1 0FE8      ADD	R30,R24
+    002E2 1FF9      ADC	R31,R25
+    002E3 9020 0078 LDS	R2,0x78
+    002E5 9030 0079 LDS	R3,0x79
+    002E7 8231      STD	Z+1,R3
+    002E8 8220      ST	Z,R2
+(0030)  ChNum &= 7;
+    002E9 9180 0104 LDS	R24,ChNum
+    002EB 7087      ANDI	R24,7
+    002EC 9380 0104 STS	ChNum,R24
+(0031)  ADMUX  =  ChNum + Vcc;
+    002EE 5C80      SUBI	R24,0xC0
+    002EF 9380 007C STS	0x7C,R24
+(0032)  StartConv();
+(0033) }
+(0034) 
+FILE: <library>
+    002F1 9180 007A LDS	R24,0x7A
+    002F3 6480      ORI	R24,0x40
+    002F4 9380 007A STS	0x7A,R24
+    002F6 9029      LD	R2,Y+
+    002F7 BE2F      OUT	0x3F,R2
+    002F8 91F9      LD	R31,Y+
+    002F9 91E9      LD	R30,Y+
+    002FA 9199      LD	R25,Y+
+    002FB 9189      LD	R24,Y+
+    002FC 9039      LD	R3,Y+
+    002FD 9029      LD	R2,Y+
+    002FE 9518      RETI
+pop_xgset003C:
+    002FF 90A9      LD	R10,Y+
+    00300 90B9      LD	R11,Y+
+    00301 90C9      LD	R12,Y+
+    00302 90D9      LD	R13,Y+
+    00303 9508      RET
+push_xgsetF0FC:
+    00304 937A      ST	-Y,R23
+    00305 936A      ST	-Y,R22
+push_xgset30FC:
+    00306 935A      ST	-Y,R21
+    00307 934A      ST	-Y,R20
+push_xgset00FC:
+    00308 92FA      ST	-Y,R15
+    00309 92EA      ST	-Y,R14
+push_xgset003C:
+    0030A 92DA      ST	-Y,R13
+    0030B 92CA      ST	-Y,R12
+    0030C 92BA      ST	-Y,R11
+    0030D 92AA      ST	-Y,R10
+    0030E 9508      RET

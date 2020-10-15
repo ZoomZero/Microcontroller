@@ -1,0 +1,24 @@
+#define SetTx0En()		PORTA|=0x02 
+#define ClrTx0En()		PORTA&=~0x02
+#define Tx0En			(PORTA&0x02) 
+
+#define Udr0Empty		(UCSR0A&0x20)
+#define Uart0TxC		(UCSR0A&0x40)
+
+void Uart0Init(void);
+
+char SymbolToUart0(char s);
+void SymbolToUart0Gar(char s);
+void StringToUart0(char *ptr);
+void FlashToUart0(const char *ptr);
+
+unsigned char GetUart0Counter(void);
+char GetUart0Symbol(void);
+void ReturnUart0Symbol(char n);
+char GetNextUartSym(void);
+
+void FixTime(void);
+
+extern char TxCFlag;
+#define SetTxC() TxCFlag |= 1
+#define ClrTxC() TxCFlag &= ~1

@@ -1,0 +1,515 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit1.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm1 *Form1;
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+        : TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+#include <stdio.h>
+#include "FTD2XX.h"
+
+AnsiString HexName;
+AnsiString FtName;
+FILE * Hex;
+char * Bin;
+char HexStr[128];
+int Adr, OldAdr;
+int BNum;
+int i;
+BYTE b;
+AnsiString ProgDir, SysDir;
+char * RdBuf;
+AnsiString FileName;
+
+void SaveParam(char * param, char * format)
+{
+  FILE * par;
+  FileName = SysDir + "\\Param.txt";
+  par = fopen(FileName.c_str(), format);
+  fprintf(par, "%s\n", param);
+  fclose(par);
+}
+
+void HexToBin(char svflag)
+{
+  Hex = fopen(HexName.c_str(), "r");
+  Bin = (char*)malloc(64*1024);
+  memset(Bin, 0xFF, 64*1024);
+
+  if (svflag) SaveParam(HexName.c_str(), "w+");
+  FileName = SysDir + "\\bin.txt";
+  FILE * result = fopen(FileName.c_str(), "wb+");
+  if (result == NULL) ShowMessage("UJAS");
+  while (fscanf(Hex, "%s", HexStr) != EOF)
+  {
+        BNum = strlen(HexStr);
+        sscanf(HexStr+3, "%4x", &Adr);
+        i = 9;
+        if (OldAdr > Adr)
+        {
+                sscanf(HexStr+i, "%2x", &b);
+                memset(Bin+OldAdr, b, 64*1024-OldAdr);
+                break;
+        }    
+        while(1)
+        {
+         sscanf(HexStr+i, "%2x", &b);
+         Bin[Adr++] = b;
+         i+=2;
+         if(i >= (BNum - 2)) break;
+        }
+        OldAdr = Adr;
+  }
+  fwrite(Bin, 1, 64*1024, result);
+  fclose(result);
+  fclose(Hex);
+}
+
+void __fastcall TForm1::Button1Click(TObject *Sender)
+{
+  if (OpenDialog1->Execute())
+  {
+        HexName = OpenDialog1->FileName;
+        Edit3->Text = OpenDialog1->FileName;
+        Edit3->Color = clLime;
+  }
+
+  HexToBin(1);
+}
+
+        FT_STATUS ftStatus;
+        DWORD FT_Device_Count;
+        FT_HANDLE ftHandle = INVALID_HANDLE_VALUE;
+        char FT_Device_String_Buffer[256];
+        FTDCB     ftDCB;
+        FTTIMEOUTS ftTS;
+
+void CreatFtDev(void)
+{
+  if (ftHandle!=INVALID_HANDLE_VALUE)
+    {
+     FT_ResetDevice (ftHandle);
+     FT_W32_PurgeComm(ftHandle,PURGE_TXCLEAR | PURGE_RXCLEAR | PURGE_RXABORT | PURGE_TXABORT);
+     FT_W32_SetupComm(ftHandle, 20*1024, //????? ??????
+                                 10*1024  //????? ????????
+                                 );
+       ftDCB.BaudRate = 115200*4;
+       ftDCB.fBinary = true;
+       ftDCB.fParity = false;
+       ftDCB.Parity = NOPARITY;
+       ftDCB.fOutxCtsFlow = false;
+       ftDCB.fOutxDsrFlow = false;
+       ftDCB.ByteSize = 8;
+       ftDCB.StopBits = ONESTOPBIT  ;//   TWOSTOPBITS
+       ftDCB.fAbortOnError = true;
+       ftDCB.fRtsControl = RTS_CONTROL_DISABLE; // RTS_CONTROL_ENABLE
+       ftDCB.fDtrControl = DTR_CONTROL_DISABLE; // DTR_CONTROL_ENABLE
+       ftDCB.fOutxCtsFlow =  false;
+       ftDCB.fTXContinueOnXoff = false; // XOFF continues Tx
+       ftDCB.fOutX = false;           // XON/XOFF out flow control
+       ftDCB.fInX = false;            // XON/XOFF in flow control
+       ftDCB.fErrorChar = false;       // enable error replacement
+       ftDCB.fNull = false;           // enable null stripping
+       ftDCB.XonLim = 16;              // transmit XON threshold
+       ftDCB.XoffLim = 16;              // transmit XOFF threshold
+       ftDCB.XonChar = 0x11; //' ';              // Tx and Rx XON character
+       ftDCB.XoffChar = 0x13; //' ';             // Tx and Rx XOFF character
+       ftDCB.ErrorChar = ' ';            // error replacement character
+       ftDCB.EofChar = ' ';              // end of input character
+       ftDCB.EvtChar = ' ';              // received event character
+    FT_W32_SetCommState(ftHandle, &ftDCB);
+        ftTS.ReadIntervalTimeout = 0;//100;//20;
+	ftTS.ReadTotalTimeoutMultiplier = 0; //1;//20;
+	ftTS.ReadTotalTimeoutConstant = 70;//20;
+	ftTS.WriteTotalTimeoutMultiplier = 0; //10;//1;
+	ftTS.WriteTotalTimeoutConstant = 0;// 20;
+     FT_W32_SetCommTimeouts(ftHandle,&ftTS);
+     FT_SetLatencyTimer(ftHandle,2 );
+    }
+}
+
+
+void Reset();
+
+void FtOpen(char * ftname)
+{
+  ftHandle = FT_W32_CreateFile(ftname,
+                                 GENERIC_READ|GENERIC_WRITE,0,0, OPEN_EXISTING,
+		                 FILE_ATTRIBUTE_NORMAL | FT_OPEN_BY_DESCRIPTION,
+				 0);
+  if (ftHandle != INVALID_HANDLE_VALUE)
+  {
+         CreatFtDev();
+           //SysReset(10);
+  }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::FormActivate(TObject *Sender)
+{
+  ProgDir = GetCurrentDir();
+  SysDir = ProgDir + "\\Sys";
+  OpenDialog1->InitialDir = "D:\\";
+  RdBuf = (char*)malloc(1024*2);
+  FtComboBox->Visible = false;
+  FTSpeed->Visible = false;
+  Timer1->Enabled = false;
+ //memset(RdBuf, 0xFF, 1024*2);
+ //RichEdit1->Clear();
+
+  FILE * params;
+  FileName = SysDir + "\\Param.txt";
+  params = fopen(FileName.c_str(), "r");
+
+  if (params != NULL)
+  {
+        char NameHex[200];
+        fscanf(params, "%s", NameHex);
+        Edit3->Color = clLime;
+        Edit3->Text = NameHex;
+        HexName = NameHex;
+        HexToBin(0);
+
+        char NameFt[20];
+        if (fscanf(params, "%s", NameFt) != EOF)
+        {
+                char speed[20];
+                Edit4->Text = NameFt;
+                FtOpen(NameFt);
+                fscanf(params, "%s", speed);
+                if (StrToIntDef(speed, -1) != -1)
+                {
+                   FT_SetBaudRate (ftHandle, StrToInt(speed));
+                   Edit5->Text = speed;
+                }
+        }
+  }
+  else
+  {
+        Edit3->Color = clRed;
+        Edit4->Visible = false;
+        Edit5->Visible = false;
+        FtComboBox->Visible = true;
+        FTSpeed->Visible = true;
+  }
+  Reset();
+}
+//---------------------------------------------------------------------------
+
+void SeekFtDevice(void)
+{
+  FT_Close(ftHandle);
+  Form1->FtComboBox->Items->Clear();
+  ftHandle=INVALID_HANDLE_VALUE;
+  FT_ListDevices( &FT_Device_Count, NULL, FT_LIST_NUMBER_ONLY );
+
+   for(int i=0; i< (int)FT_Device_Count ; i++)
+    { FT_ListDevices( (PVOID)i, FT_Device_String_Buffer,
+                    FT_OPEN_BY_DESCRIPTION |FT_LIST_BY_INDEX );
+    ftHandle = FT_W32_CreateFile(FT_Device_String_Buffer,
+                                 GENERIC_READ|GENERIC_WRITE,0,0, OPEN_EXISTING,
+		                 FILE_ATTRIBUTE_NORMAL | FT_OPEN_BY_DESCRIPTION,
+				 0);
+     if (ftHandle != INVALID_HANDLE_VALUE)
+        { Form1->FtComboBox->Items->Add(FT_Device_String_Buffer);
+
+        }
+     FT_Close(ftHandle);
+   }
+}
+
+void __fastcall TForm1::FtComboBoxDropDown(TObject *Sender)
+{
+      SeekFtDevice();
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm1::FtComboBoxChange(TObject *Sender)
+{
+  FT_Close(ftHandle);
+  FtOpen(FtComboBox->Items->Strings[FtComboBox->ItemIndex].c_str());
+  SaveParam(FtComboBox->Items->Strings[FtComboBox->ItemIndex].c_str(), "a");
+ //SeekLoader();
+ /*Label5->Caption= RdBuf;
+ Label5->Visible= true;
+
+ Image3->Visible=true;
+      Image1->Left=70;
+      Image2->Left=70;
+      Image1->Visible=false;
+      Image2->Visible=false;
+     Label17->Caption="?";   */
+
+}
+//---------------------------------------------------------------------------
+          FILE * Speeds;
+void __fastcall TForm1::FTSpeedDropDown(TObject *Sender)
+{
+        FileName = SysDir + "\\Speed.txt";
+        Speeds = fopen(FileName.c_str(), "r");
+        while (fscanf(Speeds, "%s", FT_Device_String_Buffer) != EOF)
+                FTSpeed->Items->Add(FT_Device_String_Buffer);
+        fclose(Speeds);
+}
+//---------------------------------------------------------------------------
+           int StrNum;
+           DWORD dwBaudRate;
+           char st[256];
+           AnsiString S;
+void __fastcall TForm1::FTSpeedChange(TObject *Sender)
+{
+       StrNum = FTSpeed->ItemIndex;
+       dwBaudRate = StrToInt(FTSpeed->Items->Strings[StrNum].c_str());
+       FT_SetBaudRate (ftHandle, dwBaudRate);
+       SaveParam(IntToStr(dwBaudRate).c_str(), "a");
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Label1DblClick(TObject *Sender)
+{
+          Label1->Caption = 123.4;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Edit1DblClick(TObject *Sender)
+{
+        Edit1->Text = 2345;
+}
+//---------------------------------------------------------------------------
+void TextToEdit(char * Buf, int num, TRichEdit *Edit, int start)
+{
+        AnsiString partbuf;
+        AnsiString databuf;
+        AnsiString textbuf;
+        AnsiString tmpbuf;
+       // tmpbuf.printf("%d", num);
+       // Edit->Lines->Add(tmpbuf);
+        databuf.printf("%04X", start);
+        databuf += ": ";
+        textbuf = " < " ;
+        for(int i = 0; i < num; i++)
+        {
+                tmpbuf.printf("%02X ", (unsigned char)Buf[i]);
+                databuf += tmpbuf;
+                if (Buf[i] > 0x20) tmpbuf.printf("%c", (char)Buf[i]);
+                else tmpbuf = ".";
+                textbuf += tmpbuf;
+        }
+        if (num < 16) for(int j = 0; j < 16 - num; j++) textbuf  +=  " ";
+
+        textbuf += " > ";
+        tmpbuf = " ";
+        if (num < 16) for(int j = 0; j < 16 - num; j++) tmpbuf  +=  "   ";
+
+        partbuf= databuf + tmpbuf + textbuf;
+        Edit->Lines->Add(partbuf);
+}
+
+
+bool CheckSett(char checkhex)
+{
+        if (ftHandle == INVALID_HANDLE_VALUE)
+        {
+                ShowMessage("FT not selcted");
+                Form1->FtComboBox->SetFocus();
+                return 0;
+        }
+        if (Form1->FTSpeed->ItemIndex == -1 && Form1->FtComboBox->Visible == true)
+        {
+                ShowMessage("Speed not selected");
+                Form1->FTSpeed->SetFocus();
+                return 0;
+        }
+
+        if (checkhex == 1)
+                if (Bin == NULL)
+                {
+                 ShowMessage("HEX not loaded");
+                 Form1->Button1->SetFocus();
+                 return 0;
+                }
+}
+
+void __fastcall TForm1::Edit1KeyPress(TObject *Sender, char &Key)
+{
+  if (Key == 0x0D) Edit1->Text = 567;
+}
+//---------------------------------------------------------------------------
+        DWORD lpdwBytesWritten;
+        DWORD lpdwBytesReturned;
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+  CheckSett(0);
+  FT_W32_WriteFile (ftHandle, "LOAI", 4, &lpdwBytesWritten, NULL);
+  TextToEdit("LOAI", lpdwBytesWritten, RichEdit1, 0);
+  FT_W32_ReadFile (ftHandle, RdBuf, 16, &lpdwBytesReturned, NULL);
+  RdBuf[lpdwBytesReturned] = '\0';
+  RichEdit1->Lines->Add(RdBuf);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button3Click(TObject *Sender)
+{
+  CheckSett(0);
+  FT_W32_WriteFile (ftHandle, "LOAV", 4, &lpdwBytesWritten, NULL);
+  TextToEdit("LOAV", 4, RichEdit1, 0);
+  FT_W32_ReadFile (ftHandle, RdBuf, 16, &lpdwBytesReturned, NULL);
+  RdBuf[lpdwBytesReturned] = '\0';
+  RichEdit1->Lines->Add(RdBuf);
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm1::Button4Click(TObject *Sender)
+{
+  CheckSett(0);
+  FT_W32_WriteFile (ftHandle, "LOA0", 4, &lpdwBytesWritten, NULL);
+  TextToEdit("LOA0", 4, RichEdit1, 0);
+  FT_W32_ReadFile (ftHandle, RdBuf, 1024, &lpdwBytesReturned, NULL);
+  RdBuf[lpdwBytesReturned] = '\0';
+  for(unsigned int i = 0; i < lpdwBytesReturned; i+=16)
+  {
+        if (i+16 < lpdwBytesReturned) TextToEdit(RdBuf+i, 16, RichEdit1, 0+i);
+        else  TextToEdit(RdBuf+i, lpdwBytesReturned - i, RichEdit1, 0+i);
+  }
+}
+//---------------------------------------------------------------------------
+
+
+
+void __fastcall TForm1::Button5Click(TObject *Sender)
+{
+         RichEdit1->Clear();
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm1::Button6Click(TObject *Sender)
+{
+//
+}
+//---------------------------------------------------------------------------
+        char Comm[] = "LOAd ";
+        int NUM = 256;
+        char jeja[256];
+        //Comm[4] = Form1->UpDown1->Position;
+        int PageNum = 1;
+
+
+void WaitBytes(char * buf, int num)
+{
+        AnsiString err = "More than" + IntToStr(num) + "returned";
+        int bytesnum = 0;
+        while (bytesnum != num)
+        {
+                FT_W32_ReadFile (ftHandle, buf+bytesnum, num-bytesnum, &lpdwBytesReturned, NULL);
+                bytesnum += lpdwBytesReturned;
+                if (bytesnum > num)
+                {
+                        Form1->RichEdit1->Lines->Add(err);
+                        break;
+                }
+        }
+}
+
+void __fastcall TForm1::Button7Click(TObject *Sender)
+{
+        CheckSett(1);
+        Comm[4] = PageNum;
+        //for(int i = 0; i < 256; i++) jeja[i] = i;
+        FT_W32_WriteFile (ftHandle, Comm, 5, &lpdwBytesWritten, NULL);
+        FT_W32_WriteFile (ftHandle, Bin+Comm[4]*256, 256, &lpdwBytesWritten, NULL);
+  /*              for(int i = 0; i < 256; i+=16)
+        {
+                 if (i+16 < 256) TextToEdit(jeja+i, 16, RichEdit1);
+                 else  TextToEdit(jeja+i, 256 - i, RichEdit1);
+        }     */
+        TextToEdit(Comm, 5, RichEdit1, 0);
+
+        Sleep(10);
+
+        WaitBytes(RdBuf, 259);
+        //FT_W32_ReadFile (ftHandle, RdBuf, 512, &lpdwBytesReturned, NULL);
+        RdBuf[lpdwBytesReturned] = '\0';
+        for(unsigned int i = 0; i < lpdwBytesReturned; i+=16)
+        {
+                 if (i+16 < lpdwBytesReturned) TextToEdit(RdBuf+i, 16, RichEdit1, 0+i);
+                 else  TextToEdit(RdBuf+i, lpdwBytesReturned - i, RichEdit1, 0+i);
+        }
+        AnsiString NumBytes;
+        NumBytes = "Bytes returned: ";
+        NumBytes = NumBytes + IntToStr(lpdwBytesReturned);
+        RichEdit1->Lines->Add(NumBytes);
+        AnsiString error;
+        error = "Error in byte: ";
+        for(int i = 0; i < lpdwBytesReturned - 3; i++)
+        {
+                if(RdBuf[i+3] != Bin[i+Comm[4]*256])
+                //if(RdBuf[i+3] != jeja[i])
+                {
+                        error += IntToStr(i) + ",";
+                }
+        }
+        if (error != "Error in byte: ") RichEdit1->Lines->Add(error);
+}
+//---------------------------------------------------------------------------
+
+
+
+void __fastcall TForm1::Edit2Change(TObject *Sender)
+{
+        if (CheckBox1->Checked) Button6Click(Sender);
+        // Comm[4] = Form1->UpDown1->Position;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Edit3DblClick(TObject *Sender)
+{
+        Button1Click(Sender);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Timer1Timer(TObject *Sender)
+{
+        ProgressBar1->Position = PageNum;
+        Button7Click(Sender);
+        PageNum++;
+        if (PageNum == 64)
+        {
+                PageNum = 0;
+                Button7Click(Sender);
+                Timer1->Enabled = false;
+        }
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm1::Button8Click(TObject *Sender)
+{
+        Button4Click(Sender);
+        Timer1->Enabled = true;
+}
+//---------------------------------------------------------------------------
+
+void Reset()
+{
+     FT_SetRts (ftHandle);
+     Sleep(5);
+     FT_ClrRts (ftHandle);
+     Sleep(5);
+     FT_W32_ReadFile (ftHandle, RdBuf, 7, &lpdwBytesReturned, NULL);
+     RdBuf[lpdwBytesReturned] = '\0';
+     if (RdBuf,"MainMsi\0") Form1->Edit1->Text = "Main programm exist";
+     //else Form1->Edit1->Text = "Main programm doesnt exist";
+     Form1->Edit1->Text = RdBuf;
+     if (Form1->Edit1->Text == "MainMsi\0") Form1->Edit1->Text = "Main programm exist";
+}

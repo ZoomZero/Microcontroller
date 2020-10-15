@@ -1,0 +1,45 @@
+XL
+H 3 areas 3 global symbols
+M tc1.c
+A text size 46 flags 0
+dbfile tc1.c
+dbfile D:\Тест2021\Отладчик\Основная\tc1.c
+dbfunc e InitTimer1 0 fV
+dbline FFFFFFFF 0
+dbline F 0
+dbline 10 0
+dbline 11 C
+dbline 12 10
+dbline 13 1C
+dbline 14 20
+dbline 15 24
+dbline 16 2A
+dbline FFFFFFFE 30
+dbline 0 30
+dbfunc e timer1_compa_isr 32 fV
+dbline FFFFFFFF 38
+dbline 1B 38
+dbline 1C 38
+dbline FFFFFFFE 3E
+dbline 0 3E
+S _InitTimer1 Def0000
+S _timer1_compa_isr Def0032
+A vector size 38 flags C
+A bss size 1 flags 20
+dbfile D:\Тест2021\Отладчик\Основная\tc1.c
+dbsym e Tc1Flag 0 c
+S _Tc1Flag Def0000
+T 00 00 22 24 33 24 30 92 85 00 20 92 84 00 20 92
+R 00 00 00 00
+T 0E 00 81 00 86 EC 9D E2 90 93 89 00 80 93 88 00
+R 00 00 00 00
+T 1C 00 20 92 80 00 20 92 82 00 85 E0 80 93 81 00
+R 00 00 00 00
+T 2A 00 82 E0 80 93 6F 00 08 95
+R 00 00 00 00
+T 34 00 0C 94 19 00
+R 00 00 01 00 10 04 00 00
+T 32 00 8A 93 8F B7 8A 93 81 E0 80 93 00 00 89 91
+R 00 00 00 00 00 0C 02 00
+T 40 00 8F BF 89 91 18 95
+R 00 00 00 00

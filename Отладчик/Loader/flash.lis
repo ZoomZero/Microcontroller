@@ -1,0 +1,13 @@
+                        .module flash.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile flash.c
+                        .area lit(rom, con, rel)
+ 0000           _Name::
+ 0000 4C6F616465723132383400    .byte 'L,'o,'a,'d,'e,'r,49,50,56,52,0
+ 000B                   .dbfile D:\Тест2021\Отладчик\Loader\flash.c
+ 000B                   .dbsym e Name _Name A[11:11]kc
+ 000B           _Vers::
+ 000B 76312E3000        .byte 'v,49,46,48,0
+ 0010                   .dbsym e Vers _Vers A[5:5]kc
+ 0010           ; const char Name[] = "Loader1284";
+ 0010           ; const char Vers[] = "v1.0";

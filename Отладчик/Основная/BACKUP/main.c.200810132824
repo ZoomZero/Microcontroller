@@ -1,0 +1,15 @@
+// Target : ATMega1284P
+// Crystal: 24Mhz
+
+#include <iom1284pv.h>
+#include <macros.h>
+
+#include "Uart0.h"
+
+void main(void)
+{
+ Uart0Init();
+ while(1)
+ {
+ }
+}

@@ -1,0 +1,141 @@
+                        .module adc.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile adc.c
+                        .area data(ram, con, rel)
+ 0000                   .dbfile adc.c
+ 0000           _ChNum::
+ 0000                   .blkb 1
+                        .area idata
+ 0000 00                .byte 0
+                        .area data(ram, con, rel)
+ 0001                   .dbfile adc.c
+ 0001                   .dbfile D:\Тест2021\Отладчик\Основная\adc.c
+ 0001                   .dbsym e ChNum _ChNum c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\adc.c
+ 0000                   .dbfunc e adc_init _adc_init fV
+                        .even
+ 0000           _adc_init::
+ 0000                   .dbline -1
+ 0000                   .dbline 18
+ 0000           ; // Target : ATMega1284P
+ 0000           ; // Crystal: 24Mhz
+ 0000           ; 
+ 0000           ; #include <iom1284pv.h>
+ 0000           ; #include <macros.h>
+ 0000           ; 
+ 0000           ; #define Vcc 0x40
+ 0000           ; #define Ref11 0x80
+ 0000           ; #define Ref256 0xC0
+ 0000           ; #define StartConv() ADCSRA  |= 0x40
+ 0000           ; 
+ 0000           ; int AdcBuf[8];
+ 0000           ; char ChNum = 0;
+ 0000           ; 
+ 0000           ; //ADC initialize
+ 0000           ; // Conversion time: 138uS
+ 0000           ; void adc_init(void)
+ 0000           ; {
+ 0000                   .dbline 19
+ 0000           ;  ADCSRA = 0x00; //disable adc
+ 0000 2224              clr R2
+ 0002 20927A00          sts 122,R2
+ 0006                   .dbline 20
+ 0006           ;  ADMUX  =  ChNum + Vcc; //select adc input 0
+ 0006 80910000          lds R24,_ChNum
+ 000A 805C              subi R24,192    ; addi 64
+ 000C 80937C00          sts 124,R24
+ 0010                   .dbline 21
+ 0010           ;  ACSR   = 0x80;
+ 0010 80E8              ldi R24,128
+ 0012 80BF              out 0x30,R24
+ 0014                   .dbline 22
+ 0014           ;  ADCSRA = 0x8F;
+ 0014 8FE8              ldi R24,143
+ 0016 80937A00          sts 122,R24
+ 001A                   .dbline 23
+ 001A           ;  StartConv();
+ 001A 80917A00          lds R24,122
+ 001E 8064              ori R24,64
+ 0020 80937A00          sts 122,R24
+ 0024                   .dbline -2
+ 0024           L1:
+ 0024                   .dbline 0 ; func end
+ 0024 0895              ret
+ 0026                   .dbend
+                        .area vector(rom, abs)
+                        .org 96
+ 0060 0C941300          jmp _adc_isr
+                        .area text(rom, con, rel)
+ 0026                   .dbfile D:\Тест2021\Отладчик\Основная\adc.c
+ 0026                   .dbfunc e adc_isr _adc_isr fV
+                        .even
+ 0026           _adc_isr::
+ 0026 2A92              st -y,R2
+ 0028 3A92              st -y,R3
+ 002A 8A93              st -y,R24
+ 002C 9A93              st -y,R25
+ 002E EA93              st -y,R30
+ 0030 FA93              st -y,R31
+ 0032 2FB6              IN R2,63
+ 0034 2A92              st -y,R2
+ 0036                   .dbline -1
+ 0036                   .dbline 28
+ 0036           ; }
+ 0036           ; 
+ 0036           ; #pragma interrupt_handler adc_isr:iv_ADC
+ 0036           ; void adc_isr(void)
+ 0036           ; {
+ 0036                   .dbline 29
+ 0036           ;  AdcBuf[ChNum++] = ADC;
+ 0036 20900000          lds R2,_ChNum
+ 003A 3324              clr R3
+ 003C 822D              mov R24,R2
+ 003E 8F5F              subi R24,255    ; addi 1
+ 0040 80930000          sts _ChNum,R24
+ 0044 80E0              ldi R24,<_AdcBuf
+ 0046 90E0              ldi R25,>_AdcBuf
+ 0048 E22D              mov R30,R2
+ 004A FF27              clr R31
+ 004C EE0F              lsl R30
+ 004E FF1F              rol R31
+ 0050 E80F              add R30,R24
+ 0052 F91F              adc R31,R25
+ 0054 20907800          lds R2,120
+ 0058 30907900          lds R3,120+1
+ 005C 3182              std z+1,R3
+ 005E 2082              std z+0,R2
+ 0060                   .dbline 30
+ 0060           ;  ChNum &= 7;
+ 0060 80910000          lds R24,_ChNum
+ 0064 8770              andi R24,7
+ 0066 80930000          sts _ChNum,R24
+ 006A                   .dbline 31
+ 006A           ;  ADMUX  =  ChNum + Vcc;
+ 006A 805C              subi R24,192    ; addi 64
+ 006C 80937C00          sts 124,R24
+ 0070                   .dbline 32
+ 0070           ;  StartConv();
+ 0070 80917A00          lds R24,122
+ 0074 8064              ori R24,64
+ 0076 80937A00          sts 122,R24
+ 007A                   .dbline -2
+ 007A           L2:
+ 007A                   .dbline 0 ; func end
+ 007A 2990              ld R2,y+
+ 007C 2FBE              OUT 63,R2
+ 007E F991              ld R31,y+
+ 0080 E991              ld R30,y+
+ 0082 9991              ld R25,y+
+ 0084 8991              ld R24,y+
+ 0086 3990              ld R3,y+
+ 0088 2990              ld R2,y+
+ 008A 1895              reti
+ 008C                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\adc.c
+ 0000           _AdcBuf::
+ 0000                   .blkb 16
+ 0010                   .dbsym e AdcBuf _AdcBuf A[16:8]I
+ 0010           ; }
+ 0010           ; 

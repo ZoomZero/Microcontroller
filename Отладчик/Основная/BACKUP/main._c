@@ -1,0 +1,75 @@
+// Target : ATMega1284P
+// Crystal: 24Mhz
+
+#include <iom1284pv.h>
+#include <macros.h>
+
+#include "maintenance.h"
+#include "tc1.h"
+#include "Uart0.h"
+#include "flashaps.h"
+#include "adc.h"
+
+const char MyName[] = "Debugger1284 by Ivan";
+
+#define Uart0TxC (UCSR0A&0x40)
+
+long Freq, FreqOld;
+long Frez;
+
+#pragma interrupt_handler timer0_ovf_isr:iv_TIM0_OVF
+void timer0_ovf_isr(void)
+{
+ char *p;
+ p = (char*)Freq+1;
+ *(int*)p+=1;
+ p = (char*)Freq+3;
+ p = 0;
+}
+
+#pragma interrupt_handler ana_comp_isr:iv_ANA_COMP
+void ana_comp_isr(void)
+{
+ *(char*)(&Freq)=TCNT0;
+ Frez=Freq-FreqOld;
+ if(Frez>0xFFFE) Frez=0xFFFE;
+ FreqOld = Freq;
+ 
+}
+
+void comparator_init(void)
+{
+ ACSR = ACSR & 0xF7; //ensure interrupt is off before changing
+ ACSR = 0x0F;
+}
+
+void timer0_init(void)
+{
+ TCCR0B = 0x00; //stop
+ TCNT0 = 0x00 /*INVALID SETTING*/; //set count
+ OCR0A  = 0x00 /*INVALID SETTING*/;
+ TCCR0A = 0x00; //start timer
+ TCCR0B = 0x04; //start timer
+ TIMSK0 = 0x01; //timer0 interrupt sources
+}
+
+void main(void)
+{
+ //CallLoaderL(ArBuf);
+ DDRA = 0; //port to enter
+ Uart0Init();
+ timer0_init();
+ comparator_init();
+ //InitTimer1();
+ //FlashToUart0(MyName);
+ //CLI();
+ while(1)
+ {
+  //if (Tc1Flag) break;
+  if (GetUart0Counter() > 3) CommandDc(); 
+ }
+ //T = 400000L;
+ //while (--T) ;
+ asm("jmp 0x1E000");
+ //StringToUart0("TxComplete");
+}

@@ -1,0 +1,11 @@
+                        .module flashaps.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile flashaps.c
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile flashaps.c
+ 0000           _ArBuf::
+ 0000                   .blkb 5120
+ 1400                   .dbfile D:\Тест2021\Отладчик\Основная\flashaps.c
+ 1400                   .dbsym e ArBuf _ArBuf A[5120:1280]L
+ 1400           ; long ArBuf[5*256];
+ 1400           ; 

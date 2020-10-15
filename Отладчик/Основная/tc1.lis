@@ -1,0 +1,97 @@
+                        .module tc1.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile tc1.c
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\tc1.c
+ 0000                   .dbfunc e InitTimer1 _InitTimer1 fV
+                        .even
+ 0000           _InitTimer1::
+ 0000                   .dbline -1
+ 0000                   .dbline 15
+ 0000           ; //ICC-AVR application builder : 10.08.2020 14:59:46
+ 0000           ; // Target : m1281
+ 0000           ; // Crystal: 12.000Mhz
+ 0000           ; 
+ 0000           ; #include <iom1284pv.h>
+ 0000           ; #include <macros.h>
+ 0000           ; 
+ 0000           ; char Tc1Flag;
+ 0000           ; 
+ 0000           ; //TIMER1 initialize - prescale:1024
+ 0000           ; // WGM: 0) Normal, TOP=0xFFFF
+ 0000           ; // desired value: 1Sec
+ 0000           ; // actual value:  1,000Sec (0,0%)
+ 0000           ; void InitTimer1(void)
+ 0000           ; {
+ 0000                   .dbline 16
+ 0000           ;  TCNT1 = 0;
+ 0000 2224              clr R2
+ 0002 3324              clr R3
+ 0004 30928500          sts 132+1,R3
+ 0008 20928400          sts 132,R2
+ 000C                   .dbline 17
+ 000C           ;  TCCR1B = 0x00; //stop
+ 000C 20928100          sts 129,R2
+ 0010                   .dbline 18
+ 0010           ;  OCR1A = 0x2DC6;
+ 0010 86EC              ldi R24,11718
+ 0012 9DE2              ldi R25,45
+ 0014 90938900          sts 136+1,R25
+ 0018 80938800          sts 136,R24
+ 001C                   .dbline 19
+ 001C           ;  TCCR1A = 0x00;
+ 001C 20928000          sts 128,R2
+ 0020                   .dbline 20
+ 0020           ;  TCCR1C = 0x00;
+ 0020 20928200          sts 130,R2
+ 0024                   .dbline 21
+ 0024           ;  TCCR1B = 0x05; //start Timer
+ 0024 85E0              ldi R24,5
+ 0026 80938100          sts 129,R24
+ 002A                   .dbline 22
+ 002A           ;  TIMSK1 = 0x02; //timer1 interrupt sources
+ 002A 82E0              ldi R24,2
+ 002C 80936F00          sts 111,R24
+ 0030                   .dbline -2
+ 0030           L1:
+ 0030                   .dbline 0 ; func end
+ 0030 0895              ret
+ 0032                   .dbend
+                        .area vector(rom, abs)
+                        .org 52
+ 0034 0C941900          jmp _timer1_compa_isr
+                        .area text(rom, con, rel)
+ 0032                   .dbfile D:\Тест2021\Отладчик\Основная\tc1.c
+ 0032                   .dbfunc e timer1_compa_isr _timer1_compa_isr fV
+                        .even
+ 0032           _timer1_compa_isr::
+ 0032 8A93              st -y,R24
+ 0034 8FB7              IN R24,63
+ 0036 8A93              st -y,R24
+ 0038                   .dbline -1
+ 0038                   .dbline 27
+ 0038           ; }
+ 0038           ; 
+ 0038           ; #pragma interrupt_handler timer1_compa_isr:iv_TIM1_COMPA
+ 0038           ; void timer1_compa_isr(void)
+ 0038           ; {
+ 0038                   .dbline 28
+ 0038           ;  Tc1Flag = 1;
+ 0038 81E0              ldi R24,1
+ 003A 80930000          sts _Tc1Flag,R24
+ 003E                   .dbline -2
+ 003E           L2:
+ 003E                   .dbline 0 ; func end
+ 003E 8991              ld R24,y+
+ 0040 8FBF              OUT 63,R24
+ 0042 8991              ld R24,y+
+ 0044 1895              reti
+ 0046                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\tc1.c
+ 0000           _Tc1Flag::
+ 0000                   .blkb 1
+ 0001                   .dbsym e Tc1Flag _Tc1Flag c
+ 0001           ;  //compare occured TCNT1=OCR1A
+ 0001           ; }
+ 0001           ; 
+ 0001           ; 

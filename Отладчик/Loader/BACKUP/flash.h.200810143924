@@ -1,0 +1,2 @@
+extern const char Name[] = "Loader1284";
+extern const char Vers[] = "v1.0";

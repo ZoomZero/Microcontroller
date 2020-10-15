@@ -1,0 +1,1333 @@
+Interrupt Vectors
+
+Program Code (text area)
+FILE: D:\Тест2021\Отладчик\Loader\Uart1.c
+(0001) // Target : ATMega1284P
+(0002) // Crystal: 24Mhz
+(0003) 
+(0004) #include <iom1284pv.h>
+(0005) #include <macros.h>
+(0006) 
+(0007) //#include "Data.h"
+(0008) #include "sisdef.h"
+(0009) 
+(0010) #define TransmitSize1 256
+(0011) #define FIFO1Wrap (TransmitSize1-1)
+(0012) 
+(0013) char FIFO1[TransmitSize1];
+(0014) unsigned char Read1,Write1;
+(0015) unsigned char Count1;
+(0016) 
+(0017) #define EnableUDRE1()    UCSR1B|=0x20
+(0018) #define DisableUDRE1()   UCSR1B&=~0x20 
+(0019) 
+(0020) #define Udr0Empty		(UCSR1A&0x20)
+(0021) #define Uart0TxC		(UCSR1A&0x40)
+(0022) 
+(0023) 
+(0024) #pragma interrupt_handler uart1_tx_isr:iv_USART1_TXC
+(0025) void uart1_tx_isr(void)
+__start|__text_start:
+    0F056 E001      LDI	R16,1
+    0F057 BF05      OUT	0x35,R16
+    0F058 E002      LDI	R16,2
+    0F059 BF05      OUT	0x35,R16
+    0F05A EFCF      LDI	R28,0xFF
+    0F05B E4D0      LDI	R29,0x40
+    0F05C BFCD      OUT	0x3D,R28
+    0F05D BFDE      OUT	0x3E,R29
+    0F05E 51CE      SUBI	R28,0x1E
+    0F05F 40D0      SBCI	R29,0
+    0F060 EA0A      LDI	R16,0xAA
+    0F061 8308      ST	Y,R16
+    0F062 2400      CLR	R0
+    0F063 E0E0      LDI	R30,0
+    0F064 E0F1      LDI	R31,1
+    0F065 E016      LDI	R17,6
+    0F066 31E2      CPI	R30,0x12
+    0F067 07F1      CPC	R31,R17
+    0F068 F011      BEQ	0xF06B
+    0F069 9201      ST	Z+,R0
+    0F06A CFFB      RJMP	0xF066
+    0F06B 8300      ST	Z,R16
+    0F06C EAEC      LDI	R30,0xAC
+    0F06D EEF0      LDI	R31,0xE0
+    0F06E E0A0      LDI	R26,0
+    0F06F E0B1      LDI	R27,1
+    0F070 EE10      LDI	R17,0xE0
+    0F071 E001      LDI	R16,1
+    0F072 BF0B      OUT	0x3B,R16
+    0F073 3AEC      CPI	R30,0xAC
+    0F074 07F1      CPC	R31,R17
+    0F075 F021      BEQ	0xF07A
+    0F076 95D8      ELPM
+    0F077 9631      ADIW	R30,1
+    0F078 920D      ST	X+,R0
+    0F079 CFF9      RJMP	0xF073
+    0F07A 940E F2C7 CALL	_main
+_exit:
+    0F07C CFFF      RJMP	_exit
+_uart1_tx_isr:
+    0F07D 9518      RETI
+_uart1_udre_isr:
+    0F07E 922A      ST	-Y,R2
+    0F07F 923A      ST	-Y,R3
+    0F080 938A      ST	-Y,R24
+    0F081 939A      ST	-Y,R25
+    0F082 93EA      ST	-Y,R30
+    0F083 93FA      ST	-Y,R31
+    0F084 B62F      IN	R2,0x3F
+    0F085 922A      ST	-Y,R2
+(0026) {//ClrTx0En();	
+(0027) }
+(0028) 
+(0029) #pragma interrupt_handler uart1_udre_isr:iv_USART1_UDRE
+(0030) void uart1_udre_isr(void)
+(0031) {//SetTx0En();
+(0032)  	   UDR1=FIFO1[Read1++];
+    0F086 9020 0205 LDS	R2,Read1
+    0F088 2433      CLR	R3
+    0F089 2D82      MOV	R24,R2
+    0F08A 5F8F      SUBI	R24,0xFF
+    0F08B 9380 0205 STS	Read1,R24
+    0F08D E086      LDI	R24,6
+    0F08E E092      LDI	R25,2
+    0F08F 2DE2      MOV	R30,R2
+    0F090 27FF      CLR	R31
+    0F091 0FE8      ADD	R30,R24
+    0F092 1FF9      ADC	R31,R25
+    0F093 8020      LD	R2,Z
+    0F094 9220 00CE STS	0xCE,R2
+(0033) 	  // Read1&=FIFO1Wrap;
+(0034) 	   if(--Count1==0) DisableUDRE1();
+    0F096 9180 0203 LDS	R24,Count1
+    0F098 5081      SUBI	R24,1
+    0F099 2E28      MOV	R2,R24
+    0F09A 9220 0203 STS	Count1,R2
+    0F09C 2388      TST	R24
+    0F09D F429      BNE	0xF0A3
+    0F09E 9180 00C9 LDS	R24,0xC9
+    0F0A0 7D8F      ANDI	R24,0xDF
+    0F0A1 9380 00C9 STS	0xC9,R24
+    0F0A3 9029      LD	R2,Y+
+    0F0A4 BE2F      OUT	0x3F,R2
+    0F0A5 91F9      LD	R31,Y+
+    0F0A6 91E9      LD	R30,Y+
+    0F0A7 9199      LD	R25,Y+
+    0F0A8 9189      LD	R24,Y+
+    0F0A9 9039      LD	R3,Y+
+    0F0AA 9029      LD	R2,Y+
+    0F0AB 9518      RETI
+(0035) }
+(0036) 
+(0037) char SymbolToUart1(char s)
+(0038) {if(Count1==(TransmitSize1-1)) return 0; 
+_SymbolToUart1:
+  s                    --> R16
+    0F0AC 9180 0203 LDS	R24,Count1
+    0F0AE 3F8F      CPI	R24,0xFF
+    0F0AF F411      BNE	0xF0B2
+    0F0B0 2700      CLR	R16
+    0F0B1 C01B      RJMP	0xF0CD
+(0039)  CLI();
+    0F0B2 94F8      BCLR	7
+(0040) 		 FIFO1[Write1++]=s;
+    0F0B3 9020 0204 LDS	R2,Write1
+    0F0B5 2433      CLR	R3
+    0F0B6 2D82      MOV	R24,R2
+    0F0B7 5F8F      SUBI	R24,0xFF
+    0F0B8 9380 0204 STS	Write1,R24
+    0F0BA E086      LDI	R24,6
+    0F0BB E092      LDI	R25,2
+    0F0BC 2DE2      MOV	R30,R2
+    0F0BD 27FF      CLR	R31
+    0F0BE 0FE8      ADD	R30,R24
+    0F0BF 1FF9      ADC	R31,R25
+    0F0C0 8300      ST	Z,R16
+(0041) 		 Count1++;	
+    0F0C1 9180 0203 LDS	R24,Count1
+    0F0C3 5F8F      SUBI	R24,0xFF
+    0F0C4 9380 0203 STS	Count1,R24
+(0042) 		 //Write1&=FIFO1Wrap;
+(0043)  EnableUDRE1();
+    0F0C6 9180 00C9 LDS	R24,0xC9
+    0F0C8 6280      ORI	R24,0x20
+    0F0C9 9380 00C9 STS	0xC9,R24
+(0044)  SEI();	
+    0F0CB 9478      BSET	7
+(0045) 	return 1;  }
+    0F0CC E001      LDI	R16,1
+    0F0CD 9508      RET
+_SymbolToUart1Gar:
+  s                    --> R10
+    0F0CE 92AA      ST	-Y,R10
+    0F0CF 2EA0      MOV	R10,R16
+(0046) 
+(0047) void SymbolToUart1Gar(char s)
+(0048) {while(!SymbolToUart1(s)); }
+    0F0D0 2D0A      MOV	R16,R10
+    0F0D1 DFDA      RCALL	_SymbolToUart1
+    0F0D2 2300      TST	R16
+    0F0D3 F3E1      BEQ	0xF0D0
+    0F0D4 90A9      LD	R10,Y+
+    0F0D5 9508      RET
+_StringToUart1:
+  ptr                  --> R10
+    0F0D6 92AA      ST	-Y,R10
+    0F0D7 92BA      ST	-Y,R11
+    0F0D8 0158      MOVW	R10,R16
+(0049) 
+(0050) void StringToUart1(char *ptr)
+(0051) {while(*ptr) SymbolToUart1Gar(*ptr++);
+    0F0D9 C004      RJMP	0xF0DE
+    0F0DA 01F5      MOVW	R30,R10
+    0F0DB 9101      LD	R16,Z+
+    0F0DC 015F      MOVW	R10,R30
+    0F0DD DFF0      RCALL	_SymbolToUart1Gar
+    0F0DE 01F5      MOVW	R30,R10
+    0F0DF 8020      LD	R2,Z
+    0F0E0 2022      TST	R2
+    0F0E1 F7C1      BNE	0xF0DA
+    0F0E2 90B9      LD	R11,Y+
+    0F0E3 90A9      LD	R10,Y+
+    0F0E4 9508      RET
+_FlashToUart1:
+  ptr                  --> R10
+    0F0E5 92AA      ST	-Y,R10
+    0F0E6 92BA      ST	-Y,R11
+    0F0E7 0158      MOVW	R10,R16
+(0052) }
+(0053) 
+(0054) void FlashToUart1(const char *ptr)
+(0055) {while(*ptr) SymbolToUart1Gar(*ptr++);
+    0F0E8 C007      RJMP	0xF0F0
+    0F0E9 0115      MOVW	R2,R10
+    0F0EA 01C1      MOVW	R24,R2
+    0F0EB 9601      ADIW	R24,1
+    0F0EC 015C      MOVW	R10,R24
+    0F0ED 01F1      MOVW	R30,R2
+    0F0EE 9106      ELPM	R16,Z
+    0F0EF DFDE      RCALL	_SymbolToUart1Gar
+    0F0F0 01F5      MOVW	R30,R10
+    0F0F1 9026      ELPM	R2,Z
+    0F0F2 2022      TST	R2
+    0F0F3 F7A9      BNE	0xF0E9
+    0F0F4 90B9      LD	R11,Y+
+    0F0F5 90A9      LD	R10,Y+
+    0F0F6 9508      RET
+_uart1_rx_isr:
+    0F0F7 922A      ST	-Y,R2
+    0F0F8 923A      ST	-Y,R3
+    0F0F9 938A      ST	-Y,R24
+    0F0FA 939A      ST	-Y,R25
+    0F0FB 93EA      ST	-Y,R30
+    0F0FC 93FA      ST	-Y,R31
+    0F0FD B62F      IN	R2,0x3F
+    0F0FE 922A      ST	-Y,R2
+(0056) }
+(0057) 
+(0058) ///////////////////////////
+(0059) //Receiver Functions   ////
+(0060) ///////////////////////////
+(0061) 
+(0062) #define Receive1Size 256
+(0063) char Uart1ReceiveBuffer[Receive1Size];
+(0064) 
+(0065) char Receive1Write;
+(0066) char Receive1Read;
+(0067) char Receive1Counter;
+(0068) 
+(0069) #define  Receive1BufferWrap (Receive1Size-1);
+(0070) 
+(0071) #pragma interrupt_handler uart1_rx_isr:iv_USART1_RXC
+(0072) void uart1_rx_isr(void)
+(0073) {Receive1Counter++; 
+    0F0FF 9180 0100 LDS	R24,Receive1Counter
+    0F101 5F8F      SUBI	R24,0xFF
+    0F102 9380 0100 STS	Receive1Counter,R24
+(0074)  Uart1ReceiveBuffer[Receive1Write++]=UDR1;
+    0F104 9020 0102 LDS	R2,Receive1Write
+    0F106 2433      CLR	R3
+    0F107 2D82      MOV	R24,R2
+    0F108 5F8F      SUBI	R24,0xFF
+    0F109 9380 0102 STS	Receive1Write,R24
+    0F10B E083      LDI	R24,3
+    0F10C E091      LDI	R25,1
+    0F10D 2DE2      MOV	R30,R2
+    0F10E 27FF      CLR	R31
+    0F10F 0FE8      ADD	R30,R24
+    0F110 1FF9      ADC	R31,R25
+    0F111 9020 00CE LDS	R2,0xCE
+    0F113 8220      ST	Z,R2
+    0F114 9029      LD	R2,Y+
+    0F115 BE2F      OUT	0x3F,R2
+    0F116 91F9      LD	R31,Y+
+    0F117 91E9      LD	R30,Y+
+    0F118 9199      LD	R25,Y+
+    0F119 9189      LD	R24,Y+
+    0F11A 9039      LD	R3,Y+
+    0F11B 9029      LD	R2,Y+
+    0F11C 9518      RETI
+(0075)  //Receive1Write&=Receive1BufferWrap;
+(0076) }
+(0077) 
+(0078) //returns number of symbols in UART buffer 
+(0079) char GetUart1Counter(void) //27 cycles
+(0080) {char n;
+(0081)  CLI(); n=Receive1Counter; SEI();
+_GetUart1Counter:
+  n                    --> R16
+    0F11D 94F8      BCLR	7
+    0F11E 9100 0100 LDS	R16,Receive1Counter
+    0F120 9478      BSET	7
+(0082)  return n;
+    0F121 9508      RET
+(0083) }
+(0084) 
+(0085) //Returns one (earliest) symbol from UART buffer
+(0086) void ReturnUart1Symbol(char n)
+(0087) { CLI();
+_ReturnUart1Symbol:
+  n                    --> R16
+    0F122 94F8      BCLR	7
+(0088)  Receive1Read-=n;  
+    0F123 9020 0101 LDS	R2,Receive1Read
+    0F125 1A20      SUB	R2,R16
+    0F126 9220 0101 STS	Receive1Read,R2
+(0089)  //Receive1Read&=Receive1BufferWrap; 
+(0090)  Receive1Counter+=n;   
+    0F128 9020 0100 LDS	R2,Receive1Counter
+    0F12A 0E20      ADD	R2,R16
+    0F12B 9220 0100 STS	Receive1Counter,R2
+(0091)  SEI();
+    0F12D 9478      BSET	7
+    0F12E 9508      RET
+(0092) } 
+(0093)  
+(0094) char GetUart1Symbol(void) //25 cycles
+(0095) {char symbol;
+(0096)  symbol=Uart1ReceiveBuffer[Receive1Read++];
+_GetUart1Symbol:
+  symbol               --> R16
+    0F12F 9020 0101 LDS	R2,Receive1Read
+    0F131 2433      CLR	R3
+    0F132 2D82      MOV	R24,R2
+    0F133 5F8F      SUBI	R24,0xFF
+    0F134 9380 0101 STS	Receive1Read,R24
+    0F136 E083      LDI	R24,3
+    0F137 E091      LDI	R25,1
+    0F138 2DE2      MOV	R30,R2
+    0F139 27FF      CLR	R31
+    0F13A 0FE8      ADD	R30,R24
+    0F13B 1FF9      ADC	R31,R25
+    0F13C 8100      LD	R16,Z
+(0097)  //Receive1Read&=Receive1BufferWrap; 
+(0098)  CLI(); Receive1Counter--; SEI();
+    0F13D 94F8      BCLR	7
+    0F13E 9180 0100 LDS	R24,Receive1Counter
+    0F140 5081      SUBI	R24,1
+    0F141 9380 0100 STS	Receive1Counter,R24
+    0F143 9478      BSET	7
+(0099) return symbol;
+    0F144 9508      RET
+(0100) }
+(0101) 
+(0102) /////////////////////////////////////
+(0103) //UART1 initialize
+(0104) void Uart1Init(void)
+(0105) {UCSR1B = 0x00; //disable while setting baud rate
+_Uart1Init:
+    0F145 2422      CLR	R2
+    0F146 9220 00C9 STS	0xC9,R2
+(0106)  UCSR1A = 0x00; //x2
+    0F148 9220 00C8 STS	0xC8,R2
+(0107)  UCSR1C = 0x06;
+    0F14A E086      LDI	R24,6
+    0F14B 9380 00CA STS	0xCA,R24
+(0108)  UBRR1 =  BaudRate; //230
+    0F14D E085      LDI	R24,5
+    0F14E E090      LDI	R25,0
+    0F14F 9390 00CD STS	0xCD,R25
+    0F151 9380 00CC STS	0xCC,R24
+(0109)  UCSR1B = 0xD8; //RXC + TXC
+(0110) }
+FILE: D:\Тест2021\Отладчик\Loader\main.c
+(0001) // Target : ATMega1284P
+(0002) // Crystal: 24Mhz
+(0003) 
+(0004) #include <iom1284pv.h>
+(0005) #include <macros.h>
+(0006) 
+(0007) #include "Uart0.h"
+(0008) #include "Uart1.h"
+(0009) #include "flash.h"
+(0010) 
+(0011) #define Uart0TxC (UCSR0A&0x40)
+(0012) 
+(0013) //#pragma global_register BufAdr:20
+(0014) //int BufAdr;
+(0015) 
+(0016) #pragma global_register BufAdr:20
+(0017) int BufAdr;
+(0018) #pragma global_register Counter:21
+(0019) unsigned char Counter;
+(0020) #pragma global_register FlashPointer:22
+(0021) const char *FlashPointer;
+(0022) 
+(0023) 
+(0024) #pragma abs_address:0x68
+(0025) const int z = 0xC000;
+(0026) #pragma end_abs_address
+(0027) 
+(0028) char ServZone;
+(0029) char SysNum;
+(0030) 
+(0031) /*asm(".area vector (abs)");
+(0032) asm(".org 4");
+(0033) asm("jmp _LoaderL");
+(0034) asm("jmp _LoaderH");
+(0035) asm(".area text");*/
+(0036) 
+(0037) const char LdL[] = "LoaderL";
+(0038) const char LdH[] = "LoaderH";
+(0039) 
+(0040) void LoaderL(void)
+    0F153 ED88      LDI	R24,0xD8
+    0F154 9380 00C9 STS	0xC9,R24
+    0F156 9508      RET
+_LoaderL:
+    0F157 E80C      LDI	R16,0x8C
+    0F158 EE10      LDI	R17,0xE0
+    0F159 940C F354 JMP	_FlashToUart0
+(0041) {
+(0042)  FlashToUart0(LdL);
+(0043) }
+(0044) 
+(0045) void LoaderH(void)
+(0046) {
+(0047)  FlashToUart0(LdH);
+_LoaderH:
+    0F15B E904      LDI	R16,0x94
+    0F15C EE10      LDI	R17,0xE0
+    0F15D 940C F354 JMP	_FlashToUart0
+(0048) }
+(0049) 
+(0050) void WaitSpm(char Command)
+(0051) {  
+_WaitSpm:
+  Command              --> R16
+    0F15F C001      RJMP	0xF161
+(0052)    while(SPMCSR&1) WDR();
+    0F160 95A8      WDR
+    0F161 B627      IN	R2,0x37
+    0F162 FC20      SBRC	R2,0
+    0F163 CFFC      RJMP	0xF160
+(0053)    SPMCSR=Command;
+    0F164 BF07      OUT	0x37,R16
+(0054)    asm("spm");
+    0F165 95E8      SPM
+    0F166 9508      RET
+_PageToUart0:
+  p                    --> R12
+  cnt                  --> R10
+  page                 --> R14
+    0F167 940E F3F7 CALL	push_xgset00FC
+    0F169 2EE0      MOV	R14,R16
+(0055) }
+(0056) 
+(0057) char ProgBuf[256];
+(0058) 
+(0059) void PageToUart0(char page)
+(0060) {
+(0061)  char cnt = 0;
+    0F16A 24AA      CLR	R10
+(0062)  const char *p;
+(0063)  p = (const char*)(page<<8);
+    0F16B 2CCE      MOV	R12,R14
+    0F16C 24DD      CLR	R13
+    0F16D 2CDC      MOV	R13,R12
+    0F16E 24CC      CLR	R12
+(0064)  SymbolToUart0('P');
+    0F16F E500      LDI	R16,0x50
+    0F170 940E F31B CALL	_SymbolToUart0
+(0065)  SymbolToUart0('g');
+    0F172 E607      LDI	R16,0x67
+    0F173 940E F31B CALL	_SymbolToUart0
+(0066)  SymbolToUart0(page);
+    0F175 2D0E      MOV	R16,R14
+    0F176 940E F31B CALL	_SymbolToUart0
+    0F178 C00E      RJMP	0xF187
+(0067)  while(1)
+(0068)  {
+(0069)   SymbolToUart0Gar(*p++);
+    0F179 0116      MOVW	R2,R12
+    0F17A 01C1      MOVW	R24,R2
+    0F17B 9601      ADIW	R24,1
+    0F17C 016C      MOVW	R12,R24
+    0F17D 01F1      MOVW	R30,R2
+    0F17E 9106      ELPM	R16,Z
+    0F17F 940E F33D CALL	_SymbolToUart0Gar
+(0070)   if(++cnt == 0) break;
+    0F181 2D8A      MOV	R24,R10
+    0F182 5F8F      SUBI	R24,0xFF
+    0F183 2EA8      MOV	R10,R24
+    0F184 2388      TST	R24
+    0F185 F409      BNE	0xF187
+    0F186 C001      RJMP	0xF188
+    0F187 CFF1      RJMP	0xF179
+    0F188 940C F3EC JMP	pop_xgset00FC
+_BufToFlash:
+  page                 --> Y,+0
+    0F18A 931A      ST	-Y,R17
+    0F18B 930A      ST	-Y,R16
+(0071)  }
+(0072) }
+(0073) 
+(0074) void BufToFlash(char page)
+(0075) {
+(0076)  CLI();	 //!!!!!!!
+    0F18C 94F8      BCLR	7
+(0077)  asm("mov	r31, r16"); 
+    0F18D 2FF0      MOV	R31,R16
+(0078)  asm("ldi	r30, 0x00"); 
+    0F18E E0E0      LDI	R30,0
+(0079)    
+(0080)  WaitSpm(0x03);//Стереть страницу  
+    0F18F E003      LDI	R16,3
+    0F190 DFCE      RCALL	_WaitSpm
+(0081)  WaitSpm(0x11); 
+    0F191 E101      LDI	R16,0x11
+    0F192 DFCC      RCALL	_WaitSpm
+(0082) 	    	 
+(0083)  Counter = 128;  
+    0F193 E850      LDI	R21,0x80
+(0084)     
+(0085)  asm("ldi r26, <_ProgBuf");  
+    0F194 E0A6      LDI	R26,6
+(0086)  asm("ldi r27, >_ProgBuf");  
+    0F195 E0B3      LDI	R27,3
+    0F196 C007      RJMP	0xF19E
+(0087)  while(1)
+(0088)  {
+(0089)    asm("ld r0,x+");
+    0F197 900D      LD	R0,X+
+(0090)    asm("ld r1,x+");
+    0F198 901D      LD	R1,X+
+(0091)    WaitSpm(0x01);
+    0F199 E001      LDI	R16,1
+    0F19A DFC4      RCALL	_WaitSpm
+(0092)    Counter--;
+    0F19B 955A      DEC	R21
+(0093)    if(Counter)  asm("adiw r30, 2");
+    0F19C F011      BEQ	0xF19F
+    0F19D 9632      ADIW	R30,2
+    0F19E CFF8      RJMP	0xF197
+(0094)    else break;
+(0095)   }
+(0096)  
+(0097)   asm("ldi	r30, 0x00"); 
+    0F19F E0E0      LDI	R30,0
+(0098)   WaitSpm(0x05);//Писать 
+    0F1A0 E005      LDI	R16,5
+    0F1A1 DFBD      RCALL	_WaitSpm
+(0099)   WaitSpm(0x11); 
+    0F1A2 E101      LDI	R16,0x11
+    0F1A3 DFBB      RCALL	_WaitSpm
+(0100)   SEI();    
+    0F1A4 9478      BSET	7
+    0F1A5 9622      ADIW	R28,2
+    0F1A6 9508      RET
+_BufToUart0:
+  k                    --> R10
+    0F1A7 92AA      ST	-Y,R10
+(0101) }
+(0102) 
+(0103) 
+(0104) void BufToUart0(void)
+(0105) {
+(0106)  char k;
+(0107)  k=0;
+    0F1A8 24AA      CLR	R10
+    0F1A9 C011      RJMP	0xF1BB
+(0108)  while(1)
+(0109)    {
+(0110)    	SymbolToUart0(ProgBuf[k++]);
+    0F1AA 2C2A      MOV	R2,R10
+    0F1AB 2433      CLR	R3
+    0F1AC 2D82      MOV	R24,R2
+    0F1AD 5F8F      SUBI	R24,0xFF
+    0F1AE 2EA8      MOV	R10,R24
+    0F1AF E086      LDI	R24,6
+    0F1B0 E093      LDI	R25,3
+    0F1B1 2DE2      MOV	R30,R2
+    0F1B2 27FF      CLR	R31
+    0F1B3 0FE8      ADD	R30,R24
+    0F1B4 1FF9      ADC	R31,R25
+    0F1B5 8100      LD	R16,Z
+    0F1B6 940E F31B CALL	_SymbolToUart0
+(0111)     if(!k) break;
+    0F1B8 20AA      TST	R10
+    0F1B9 F409      BNE	0xF1BB
+    0F1BA C001      RJMP	0xF1BC
+    0F1BB CFEE      RJMP	0xF1AA
+    0F1BC 90A9      LD	R10,Y+
+    0F1BD 9508      RET
+_Load0:
+  p                    --> R12
+  r                    --> R10
+    0F1BE 940E F3F9 CALL	push_xgset003C
+(0112)    }
+(0113) }
+(0114) 
+(0115) void Load0(void)
+(0116) {
+(0117)  const char *p;
+(0118)  char r;
+(0119)  p = (const char *)0xE000; //адрес старта загрузчика
+    0F1C0 E080      LDI	R24,0
+    0F1C1 EE90      LDI	R25,0xE0
+    0F1C2 016C      MOVW	R12,R24
+(0120)  r = 0;
+    0F1C3 24AA      CLR	R10
+(0121)  RAMPZ = 1;
+    0F1C4 E081      LDI	R24,1
+    0F1C5 BF8B      OUT	0x3B,R24
+    0F1C6 C018      RJMP	0xF1DF
+(0122)  while(1)
+(0123)  {
+(0124)   ProgBuf[r] = *p++;
+    0F1C7 0116      MOVW	R2,R12
+    0F1C8 01C1      MOVW	R24,R2
+    0F1C9 9601      ADIW	R24,1
+    0F1CA 016C      MOVW	R12,R24
+    0F1CB E086      LDI	R24,6
+    0F1CC E093      LDI	R25,3
+    0F1CD 2DEA      MOV	R30,R10
+    0F1CE 27FF      CLR	R31
+    0F1CF 0FE8      ADD	R30,R24
+    0F1D0 1FF9      ADC	R31,R25
+    0F1D1 01D1      MOVW	R26,R2
+    0F1D2 93FA      ST	-Y,R31
+    0F1D3 93EA      ST	-Y,R30
+    0F1D4 01FD      MOVW	R30,R26
+    0F1D5 9026      ELPM	R2,Z
+    0F1D6 91E9      LD	R30,Y+
+    0F1D7 91F9      LD	R31,Y+
+    0F1D8 8220      ST	Z,R2
+(0125)   if (++r == 0) break;
+    0F1D9 2D8A      MOV	R24,R10
+    0F1DA 5F8F      SUBI	R24,0xFF
+    0F1DB 2EA8      MOV	R10,R24
+    0F1DC 2388      TST	R24
+    0F1DD F409      BNE	0xF1DF
+    0F1DE C001      RJMP	0xF1E0
+    0F1DF CFE7      RJMP	0xF1C7
+(0126)  }
+(0127)  ProgBuf[0x68] = 0;
+    0F1E0 2422      CLR	R2
+    0F1E1 9220 036E STS	ProgBuf+104,R2
+(0128)  ProgBuf[0x69] = ServZone;
+    0F1E3 9020 0407 LDS	R2,ServZone
+    0F1E5 9220 036F STS	ProgBuf+105,R2
+(0129)  ProgBuf[0x6A] = SysNum;
+    0F1E7 9020 0406 LDS	R2,SysNum
+    0F1E9 9220 0370 STS	ProgBuf+106,R2
+(0130)  RAMPZ = 0;
+    0F1EB 2422      CLR	R2
+    0F1EC BE2B      OUT	0x3B,R2
+(0131)  BufToFlash(0);
+    0F1ED 2700      CLR	R16
+    0F1EE DF9B      RCALL	_BufToFlash
+(0132)  //BufToUart0();
+(0133)  PageToUart0(0);
+    0F1EF 2700      CLR	R16
+    0F1F0 DF76      RCALL	_PageToUart0
+    0F1F1 940C F3E7 JMP	pop_xgset003C
+_MayBeLoad0:
+    0F1F3 92AA      ST	-Y,R10
+    0F1F4 92BA      ST	-Y,R11
+(0134) }
+(0135) 
+(0136) void MayBeLoad0(void)
+(0137) {
+(0138)  if (GetUart0Counter() < 4) return;
+    0F1F5 940E F392 CALL	_GetUart0Counter
+    0F1F7 3004      CPI	R16,4
+    0F1F8 F408      BCC	0xF1FA
+    0F1F9 C062      RJMP	0xF25C
+(0139)  if (GetUart0Symbol() != 'L') return;
+    0F1FA 940E F3B0 CALL	_GetUart0Symbol
+    0F1FC 340C      CPI	R16,0x4C
+    0F1FD F009      BEQ	0xF1FF
+    0F1FE C05D      RJMP	0xF25C
+(0140)  if (GetUart0Symbol() != 'O') return;
+    0F1FF 940E F3B0 CALL	_GetUart0Symbol
+    0F201 2EA0      MOV	R10,R16
+    0F202 340F      CPI	R16,0x4F
+    0F203 F009      BEQ	0xF205
+    0F204 C057      RJMP	0xF25C
+(0141)  if (GetUart0Symbol() != 'A') return;
+    0F205 940E F3B0 CALL	_GetUart0Symbol
+    0F207 2EA0      MOV	R10,R16
+    0F208 3401      CPI	R16,0x41
+    0F209 F009      BEQ	0xF20B
+    0F20A C051      RJMP	0xF25C
+(0142)  switch (GetUart0Symbol())
+    0F20B 940E F3B0 CALL	_GetUart0Symbol
+    0F20D 2EA0      MOV	R10,R16
+    0F20E 24BB      CLR	R11
+    0F20F 01C5      MOVW	R24,R10
+    0F210 3582      CPI	R24,0x52
+    0F211 E0E0      LDI	R30,0
+    0F212 079E      CPC	R25,R30
+    0F213 F409      BNE	0xF215
+    0F214 C047      RJMP	0xF25C
+    0F215 E582      LDI	R24,0x52
+    0F216 158A      CP	R24,R10
+    0F217 059B      CPC	R25,R11
+    0F218 F0BC      BLT	0xF230
+    0F219 01C5      MOVW	R24,R10
+    0F21A 3484      CPI	R24,0x44
+    0F21B E0E0      LDI	R30,0
+    0F21C 079E      CPC	R25,R30
+    0F21D F409      BNE	0xF21F
+    0F21E C03D      RJMP	0xF25C
+    0F21F E484      LDI	R24,0x44
+    0F220 E090      LDI	R25,0
+    0F221 158A      CP	R24,R10
+    0F222 059B      CPC	R25,R11
+    0F223 F034      BLT	0xF22A
+    0F224 01C5      MOVW	R24,R10
+    0F225 3380      CPI	R24,0x30
+    0F226 E0E0      LDI	R30,0
+    0F227 079E      CPC	R25,R30
+    0F228 F109      BEQ	0xF24A
+    0F229 C032      RJMP	0xF25C
+    0F22A 01C5      MOVW	R24,R10
+    0F22B 3489      CPI	R24,0x49
+    0F22C E0E0      LDI	R30,0
+    0F22D 079E      CPC	R25,R30
+    0F22E F0E9      BEQ	0xF24C
+    0F22F C02C      RJMP	0xF25C
+    0F230 01C5      MOVW	R24,R10
+    0F231 3684      CPI	R24,0x64
+    0F232 E0E0      LDI	R30,0
+    0F233 079E      CPC	R25,R30
+    0F234 F139      BEQ	0xF25C
+    0F235 E684      LDI	R24,0x64
+    0F236 E090      LDI	R25,0
+    0F237 158A      CP	R24,R10
+    0F238 059B      CPC	R25,R11
+    0F239 F034      BLT	0xF240
+    0F23A 01C5      MOVW	R24,R10
+    0F23B 3586      CPI	R24,0x56
+    0F23C E0E0      LDI	R30,0
+    0F23D 079E      CPC	R25,R30
+    0F23E F091      BEQ	0xF251
+    0F23F C01C      RJMP	0xF25C
+    0F240 01C5      MOVW	R24,R10
+    0F241 3782      CPI	R24,0x72
+    0F242 E0E0      LDI	R30,0
+    0F243 079E      CPC	R25,R30
+    0F244 F0B9      BEQ	0xF25C
+    0F245 3783      CPI	R24,0x73
+    0F246 E0E0      LDI	R30,0
+    0F247 079E      CPC	R25,R30
+    0F248 F089      BEQ	0xF25A
+    0F249 C012      RJMP	0xF25C
+(0143)  {
+(0144)   		case '0': Load0(); break;
+    0F24A DF73      RCALL	_Load0
+    0F24B C010      RJMP	0xF25C
+(0145) 		case 'I': FlashToUart0(Name); break;
+    0F24C E90C      LDI	R16,0x9C
+    0F24D EE10      LDI	R17,0xE0
+    0F24E 940E F354 CALL	_FlashToUart0
+    0F250 C00B      RJMP	0xF25C
+(0146) 		case 'V': FlashToUart0(Vers); SymbolToUart0(ServZone); break;
+    0F251 EA07      LDI	R16,0xA7
+    0F252 EE10      LDI	R17,0xE0
+    0F253 940E F354 CALL	_FlashToUart0
+    0F255 9100 0407 LDS	R16,ServZone
+    0F257 940E F31B CALL	_SymbolToUart0
+    0F259 C002      RJMP	0xF25C
+(0147) 		case 'D': break;
+(0148) 		case 'd': break;
+(0149) 		case 'R': break;
+(0150) 		case 'r': break;
+(0151) 		case 's': asm("jmp 0x0000");
+    0F25A 940C 0000 JMP	0x0
+(0152) 		default: return;
+    0F25C 90B9      LD	R11,Y+
+    0F25D 90A9      LD	R10,Y+
+    0F25E 9508      RET
+_MayBeLoad1:
+    0F25F 92AA      ST	-Y,R10
+    0F260 92BA      ST	-Y,R11
+(0153)  }
+(0154) }
+(0155) 
+(0156) void MayBeLoad1(void)
+(0157) {
+(0158)  if (GetUart1Counter() < 4) return;
+    0F261 940E F11D CALL	_GetUart1Counter
+    0F263 3004      CPI	R16,4
+    0F264 F408      BCC	0xF266
+    0F265 C05E      RJMP	0xF2C4
+(0159)  if (GetUart1Symbol() != 'L') return;
+    0F266 940E F12F CALL	_GetUart1Symbol
+    0F268 340C      CPI	R16,0x4C
+    0F269 F009      BEQ	0xF26B
+    0F26A C059      RJMP	0xF2C4
+(0160)  if (GetUart1Symbol() != 'O') return;
+    0F26B 940E F12F CALL	_GetUart1Symbol
+    0F26D 2EA0      MOV	R10,R16
+    0F26E 340F      CPI	R16,0x4F
+    0F26F F009      BEQ	0xF271
+    0F270 C053      RJMP	0xF2C4
+(0161)  if (GetUart1Symbol() != 'A') return;
+    0F271 940E F12F CALL	_GetUart1Symbol
+    0F273 2EA0      MOV	R10,R16
+    0F274 3401      CPI	R16,0x41
+    0F275 F009      BEQ	0xF277
+    0F276 C04D      RJMP	0xF2C4
+(0162)  switch (GetUart1Symbol())
+    0F277 940E F12F CALL	_GetUart1Symbol
+    0F279 2EA0      MOV	R10,R16
+    0F27A 24BB      CLR	R11
+    0F27B 01C5      MOVW	R24,R10
+    0F27C 3582      CPI	R24,0x52
+    0F27D E0E0      LDI	R30,0
+    0F27E 079E      CPC	R25,R30
+    0F27F F409      BNE	0xF281
+    0F280 C043      RJMP	0xF2C4
+    0F281 E582      LDI	R24,0x52
+    0F282 158A      CP	R24,R10
+    0F283 059B      CPC	R25,R11
+    0F284 F0BC      BLT	0xF29C
+    0F285 01C5      MOVW	R24,R10
+    0F286 3484      CPI	R24,0x44
+    0F287 E0E0      LDI	R30,0
+    0F288 079E      CPC	R25,R30
+    0F289 F409      BNE	0xF28B
+    0F28A C039      RJMP	0xF2C4
+    0F28B E484      LDI	R24,0x44
+    0F28C E090      LDI	R25,0
+    0F28D 158A      CP	R24,R10
+    0F28E 059B      CPC	R25,R11
+    0F28F F034      BLT	0xF296
+    0F290 01C5      MOVW	R24,R10
+    0F291 3380      CPI	R24,0x30
+    0F292 E0E0      LDI	R30,0
+    0F293 079E      CPC	R25,R30
+    0F294 F109      BEQ	0xF2B6
+    0F295 C02E      RJMP	0xF2C4
+    0F296 01C5      MOVW	R24,R10
+    0F297 3489      CPI	R24,0x49
+    0F298 E0E0      LDI	R30,0
+    0F299 079E      CPC	R25,R30
+    0F29A F0E9      BEQ	0xF2B8
+    0F29B C028      RJMP	0xF2C4
+    0F29C 01C5      MOVW	R24,R10
+    0F29D 3684      CPI	R24,0x64
+    0F29E E0E0      LDI	R30,0
+    0F29F 079E      CPC	R25,R30
+    0F2A0 F119      BEQ	0xF2C4
+    0F2A1 E684      LDI	R24,0x64
+    0F2A2 E090      LDI	R25,0
+    0F2A3 158A      CP	R24,R10
+    0F2A4 059B      CPC	R25,R11
+    0F2A5 F034      BLT	0xF2AC
+    0F2A6 01C5      MOVW	R24,R10
+    0F2A7 3586      CPI	R24,0x56
+    0F2A8 E0E0      LDI	R30,0
+    0F2A9 079E      CPC	R25,R30
+    0F2AA F091      BEQ	0xF2BD
+    0F2AB C018      RJMP	0xF2C4
+    0F2AC 01C5      MOVW	R24,R10
+    0F2AD 3782      CPI	R24,0x72
+    0F2AE E0E0      LDI	R30,0
+    0F2AF 079E      CPC	R25,R30
+    0F2B0 F099      BEQ	0xF2C4
+    0F2B1 3783      CPI	R24,0x73
+    0F2B2 E0E0      LDI	R30,0
+    0F2B3 079E      CPC	R25,R30
+    0F2B4 F069      BEQ	0xF2C2
+    0F2B5 C00E      RJMP	0xF2C4
+(0163)  {
+(0164)   		case '0': Load0(); break;
+    0F2B6 DF07      RCALL	_Load0
+    0F2B7 C00C      RJMP	0xF2C4
+(0165) 		case 'I': FlashToUart1(Name); break;
+    0F2B8 E90C      LDI	R16,0x9C
+    0F2B9 EE10      LDI	R17,0xE0
+    0F2BA 940E F0E5 CALL	_FlashToUart1
+    0F2BC C007      RJMP	0xF2C4
+(0166) 		case 'V': FlashToUart1(Vers); break;
+    0F2BD EA07      LDI	R16,0xA7
+    0F2BE EE10      LDI	R17,0xE0
+    0F2BF 940E F0E5 CALL	_FlashToUart1
+    0F2C1 C002      RJMP	0xF2C4
+(0167) 		case 'D': break;
+(0168) 		case 'd': break;
+(0169) 		case 'R': break;
+(0170) 		case 'r': break;
+(0171) 		case 's': asm("jmp 0x0000");
+    0F2C2 940C 0000 JMP	0x0
+(0172) 		default: return;
+    0F2C4 90B9      LD	R11,Y+
+    0F2C5 90A9      LD	R10,Y+
+    0F2C6 9508      RET
+(0173)  }
+(0174) }
+(0175) 
+(0176) void main(void)
+(0177) {
+(0178)  MCUCR = 1;
+_main:
+    0F2C7 E081      LDI	R24,1
+    0F2C8 BF85      OUT	0x35,R24
+(0179)  MCUCR = 2;
+    0F2C9 E082      LDI	R24,2
+    0F2CA BF85      OUT	0x35,R24
+(0180)  RAMPZ = 0;
+    0F2CB 2422      CLR	R2
+    0F2CC BE2B      OUT	0x3B,R2
+(0181)  ServZone = *((const char*)(0x69));
+    0F2CD E6E9      LDI	R30,0x69
+    0F2CE E0F0      LDI	R31,0
+    0F2CF 9026      ELPM	R2,Z
+    0F2D0 9220 0407 STS	ServZone,R2
+(0182)  SysNum = 3;
+    0F2D2 E083      LDI	R24,3
+    0F2D3 9380 0406 STS	SysNum,R24
+(0183)  RAMPZ = 1;
+    0F2D5 E081      LDI	R24,1
+    0F2D6 BF8B      OUT	0x3B,R24
+(0184)  Uart0Init();
+    0F2D7 940E F3D5 CALL	_Uart0Init
+(0185)  Uart1Init();
+    0F2D9 940E F145 CALL	_Uart1Init
+    0F2DB C002      RJMP	0xF2DE
+(0186)  //PageToUart0(0);
+(0187)  //FlashToUart0(Name);
+(0188)  //FlashToUart0(Vers);
+(0189)  //LoaderL();
+(0190)  //Load0();
+(0191)  while(1)
+(0192)  {
+(0193)   MayBeLoad0();
+    0F2DC DF16      RCALL	_MayBeLoad0
+(0194)   MayBeLoad1();
+    0F2DD DF81      RCALL	_MayBeLoad1
+    0F2DE CFFD      RJMP	0xF2DC
+(0195)  }
+(0196)  
+(0197)  while(1)
+(0198)  {
+(0199) 
+(0200)  }
+(0201)  //asm("jmp 0x1E000");
+(0202)  //StringToUart0("TxComplete");
+(0203) }
+(0204) 
+FILE: D:\Тест2021\Отладчик\Loader\Uart0.c
+(0001) // Target : ATMega1284P
+(0002) // Crystal: 24Mhz
+(0003) 
+(0004) #include <iom1284pv.h>
+(0005) #include <macros.h>
+(0006) 
+(0007) //#include "FlashAbs.h"
+(0008) #include "sisdef.h"
+(0009) 
+(0010) 
+(0011) #define TransmitSize0 256
+(0012) #define FIFO0Wrap (TransmitSize0-1)
+(0013) 
+(0014) char FIFO0[TransmitSize0];
+(0015) unsigned char Read0, Write0;
+(0016) unsigned char Count0;
+(0017) 
+(0018) #define EnableUDRE0()    UCSR0B|=0x20
+(0019) #define DisableUDRE0()   UCSR0B&=~0x20 
+(0020) 
+(0021) #define SetTx0En()		PORTA|=0x02 
+(0022) #define ClrTx0En()		PORTA&=~0x02
+(0023) #define Tx0En			(PORTA&0x02) 
+(0024) 
+(0025) #define Udr0Empty		(UCSR0A&0x20)
+(0026) #define Uart0TxC		(UCSR0A&0x40)
+(0027) 
+(0028) char TxCFlag;
+(0029) #define SetTxC() TxCFlag |= 1
+(0030) #define ClrTxC() TxCFlag &= ~1
+(0031) 
+(0032) #pragma interrupt_handler uart0_tx_isr:iv_USART0_TXC
+(0033) void uart0_tx_isr(void)
+    0F2DF CFFF      RJMP	0xF2DF
+    0F2E0 9508      RET
+_uart0_tx_isr:
+    0F2E1 938A      ST	-Y,R24
+    0F2E2 B78F      IN	R24,0x3F
+    0F2E3 938A      ST	-Y,R24
+    0F2E4 9180 050E LDS	R24,TxCFlag
+    0F2E6 6081      ORI	R24,1
+    0F2E7 9380 050E STS	TxCFlag,R24
+    0F2E9 9189      LD	R24,Y+
+    0F2EA BF8F      OUT	0x3F,R24
+    0F2EB 9189      LD	R24,Y+
+    0F2EC 9518      RETI
+_uart0_udre_isr:
+    0F2ED 922A      ST	-Y,R2
+    0F2EE 923A      ST	-Y,R3
+    0F2EF 938A      ST	-Y,R24
+    0F2F0 939A      ST	-Y,R25
+    0F2F1 93EA      ST	-Y,R30
+    0F2F2 93FA      ST	-Y,R31
+    0F2F3 B62F      IN	R2,0x3F
+    0F2F4 922A      ST	-Y,R2
+(0034) {//ClrTx0En();	
+(0035) 	SetTxC();
+(0036) }
+(0037) 
+(0038) #pragma interrupt_handler uart0_udre_isr:iv_USART0_UDRE
+(0039) void uart0_udre_isr(void)
+(0040) {//SetTx0En();
+(0041)  	   UDR0=FIFO0[Read0++];
+    0F2F5 9020 0511 LDS	R2,Read0
+    0F2F7 2433      CLR	R3
+    0F2F8 2D82      MOV	R24,R2
+    0F2F9 5F8F      SUBI	R24,0xFF
+    0F2FA 9380 0511 STS	Read0,R24
+    0F2FC E182      LDI	R24,0x12
+    0F2FD E095      LDI	R25,5
+    0F2FE 2DE2      MOV	R30,R2
+    0F2FF 27FF      CLR	R31
+    0F300 0FE8      ADD	R30,R24
+    0F301 1FF9      ADC	R31,R25
+    0F302 8020      LD	R2,Z
+    0F303 9220 00C6 STS	0xC6,R2
+(0042) 	   //Read0&=FIFO0Wrap;
+(0043) 	   if(--Count0==0) DisableUDRE0();
+    0F305 9180 050F LDS	R24,Count0
+    0F307 5081      SUBI	R24,1
+    0F308 2E28      MOV	R2,R24
+    0F309 9220 050F STS	Count0,R2
+    0F30B 2388      TST	R24
+    0F30C F429      BNE	0xF312
+    0F30D 9180 00C1 LDS	R24,0xC1
+    0F30F 7D8F      ANDI	R24,0xDF
+    0F310 9380 00C1 STS	0xC1,R24
+    0F312 9029      LD	R2,Y+
+    0F313 BE2F      OUT	0x3F,R2
+    0F314 91F9      LD	R31,Y+
+    0F315 91E9      LD	R30,Y+
+    0F316 9199      LD	R25,Y+
+    0F317 9189      LD	R24,Y+
+    0F318 9039      LD	R3,Y+
+    0F319 9029      LD	R2,Y+
+    0F31A 9518      RETI
+(0044) }
+(0045) 
+(0046) char SymbolToUart0(char s)
+(0047) {if(Count0 == (TransmitSize0 - 1)) return 0; 
+_SymbolToUart0:
+  s                    --> R16
+    0F31B 9180 050F LDS	R24,Count0
+    0F31D 3F8F      CPI	R24,0xFF
+    0F31E F411      BNE	0xF321
+    0F31F 2700      CLR	R16
+    0F320 C01B      RJMP	0xF33C
+(0048)  CLI();
+    0F321 94F8      BCLR	7
+(0049) 		 FIFO0[Write0++]=s;
+    0F322 9020 0510 LDS	R2,Write0
+    0F324 2433      CLR	R3
+    0F325 2D82      MOV	R24,R2
+    0F326 5F8F      SUBI	R24,0xFF
+    0F327 9380 0510 STS	Write0,R24
+    0F329 E182      LDI	R24,0x12
+    0F32A E095      LDI	R25,5
+    0F32B 2DE2      MOV	R30,R2
+    0F32C 27FF      CLR	R31
+    0F32D 0FE8      ADD	R30,R24
+    0F32E 1FF9      ADC	R31,R25
+    0F32F 8300      ST	Z,R16
+(0050) 		 Count0++;	
+    0F330 9180 050F LDS	R24,Count0
+    0F332 5F8F      SUBI	R24,0xFF
+    0F333 9380 050F STS	Count0,R24
+(0051) 		 //Write0&=FIFO0Wrap;
+(0052)  EnableUDRE0();
+    0F335 9180 00C1 LDS	R24,0xC1
+    0F337 6280      ORI	R24,0x20
+    0F338 9380 00C1 STS	0xC1,R24
+(0053)  SEI();	
+    0F33A 9478      BSET	7
+(0054) 	return 1;  }
+    0F33B E001      LDI	R16,1
+    0F33C 9508      RET
+_SymbolToUart0Gar:
+  s                    --> R10
+    0F33D 92AA      ST	-Y,R10
+    0F33E 2EA0      MOV	R10,R16
+(0055) 
+(0056) void SymbolToUart0Gar(char s)
+(0057) {while(!SymbolToUart0(s)); }
+    0F33F 2D0A      MOV	R16,R10
+    0F340 DFDA      RCALL	_SymbolToUart0
+    0F341 2300      TST	R16
+    0F342 F3E1      BEQ	0xF33F
+    0F343 90A9      LD	R10,Y+
+    0F344 9508      RET
+_StringToUart0:
+  ptr                  --> R10
+    0F345 92AA      ST	-Y,R10
+    0F346 92BA      ST	-Y,R11
+    0F347 0158      MOVW	R10,R16
+(0058) 
+(0059) void StringToUart0(char *ptr)
+(0060) {while(*ptr) SymbolToUart0Gar(*ptr++);
+    0F348 C004      RJMP	0xF34D
+    0F349 01F5      MOVW	R30,R10
+    0F34A 9101      LD	R16,Z+
+    0F34B 015F      MOVW	R10,R30
+    0F34C DFF0      RCALL	_SymbolToUart0Gar
+    0F34D 01F5      MOVW	R30,R10
+    0F34E 8020      LD	R2,Z
+    0F34F 2022      TST	R2
+    0F350 F7C1      BNE	0xF349
+    0F351 90B9      LD	R11,Y+
+    0F352 90A9      LD	R10,Y+
+    0F353 9508      RET
+_FlashToUart0:
+  ptr                  --> R10
+    0F354 92AA      ST	-Y,R10
+    0F355 92BA      ST	-Y,R11
+    0F356 0158      MOVW	R10,R16
+(0061) }
+(0062) 
+(0063) void FlashToUart0(const char *ptr)
+(0064) {while(*ptr) SymbolToUart0Gar(*ptr++);
+    0F357 C007      RJMP	0xF35F
+    0F358 0115      MOVW	R2,R10
+    0F359 01C1      MOVW	R24,R2
+    0F35A 9601      ADIW	R24,1
+    0F35B 015C      MOVW	R10,R24
+    0F35C 01F1      MOVW	R30,R2
+    0F35D 9106      ELPM	R16,Z
+    0F35E DFDE      RCALL	_SymbolToUart0Gar
+    0F35F 01F5      MOVW	R30,R10
+    0F360 9026      ELPM	R2,Z
+    0F361 2022      TST	R2
+    0F362 F7A9      BNE	0xF358
+    0F363 90B9      LD	R11,Y+
+    0F364 90A9      LD	R10,Y+
+    0F365 9508      RET
+_uart0_rx_isr:
+    0F366 922A      ST	-Y,R2
+    0F367 923A      ST	-Y,R3
+    0F368 938A      ST	-Y,R24
+    0F369 939A      ST	-Y,R25
+    0F36A 93EA      ST	-Y,R30
+    0F36B 93FA      ST	-Y,R31
+    0F36C B62F      IN	R2,0x3F
+    0F36D 922A      ST	-Y,R2
+(0065) }
+(0066) 
+(0067) ///////////////////////////
+(0068) //Receiver Functions   ////
+(0069) ///////////////////////////
+(0070) 
+(0071) //Constant and variable block for UART receiver functions
+(0072) 
+(0073) #define Receive0Size 256
+(0074) char Uart0ReceiveBuffer[Receive0Size];
+(0075) 
+(0076) int Receive0Write;
+(0077) int Receive0Read;
+(0078) int Receive0Counter;
+(0079) 
+(0080) //int Receive0BufferWrap= (Receive0Size-1);
+(0081) 
+(0082) #pragma interrupt_handler uart0_rx_isr:iv_USART0_RXC
+(0083) void uart0_rx_isr(void)
+(0084) {Receive0Counter++; 
+    0F36E 9180 0408 LDS	R24,Receive0Counter
+    0F370 9190 0409 LDS	R25,Receive0Counter+1
+    0F372 9601      ADIW	R24,1
+    0F373 9390 0409 STS	Receive0Counter+1,R25
+    0F375 9380 0408 STS	Receive0Counter,R24
+(0085)  Uart0ReceiveBuffer[Receive0Write++]=UDR0;
+    0F377 9020 040C LDS	R2,Receive0Write
+    0F379 9030 040D LDS	R3,Receive0Write+1
+    0F37B 01C1      MOVW	R24,R2
+    0F37C 9601      ADIW	R24,1
+    0F37D 9390 040D STS	Receive0Write+1,R25
+    0F37F 9380 040C STS	Receive0Write,R24
+    0F381 E08E      LDI	R24,0xE
+    0F382 E094      LDI	R25,4
+    0F383 01F1      MOVW	R30,R2
+    0F384 0FE8      ADD	R30,R24
+    0F385 1FF9      ADC	R31,R25
+    0F386 9020 00C6 LDS	R2,0xC6
+    0F388 8220      ST	Z,R2
+    0F389 9029      LD	R2,Y+
+    0F38A BE2F      OUT	0x3F,R2
+    0F38B 91F9      LD	R31,Y+
+    0F38C 91E9      LD	R30,Y+
+    0F38D 9199      LD	R25,Y+
+    0F38E 9189      LD	R24,Y+
+    0F38F 9039      LD	R3,Y+
+    0F390 9029      LD	R2,Y+
+    0F391 9518      RETI
+(0086)  //Receive0Write&=Receive0BufferWrap;
+(0087) }
+(0088) 
+(0089) //returns number of symbols in UART buffer 
+(0090) int GetUart0Counter(void) //27 cycles
+(0091) {int n;
+(0092)  CLI(); n=Receive0Counter; SEI();
+_GetUart0Counter:
+  n                    --> R16
+    0F392 94F8      BCLR	7
+    0F393 9100 0408 LDS	R16,Receive0Counter
+    0F395 9110 0409 LDS	R17,Receive0Counter+1
+    0F397 9478      BSET	7
+(0093)  return n;
+    0F398 9508      RET
+(0094) }
+(0095) 
+(0096) //Returns one (earliest) symbol from UART buffer
+(0097) void ReturnUart0Symbol(int n)
+(0098) { CLI();
+_ReturnUart0Symbol:
+  n                    --> R16
+    0F399 94F8      BCLR	7
+(0099)  Receive0Read-=n;  
+    0F39A 9020 040A LDS	R2,Receive0Read
+    0F39C 9030 040B LDS	R3,Receive0Read+1
+    0F39E 1A20      SUB	R2,R16
+    0F39F 0A31      SBC	R3,R17
+    0F3A0 9230 040B STS	Receive0Read+1,R3
+    0F3A2 9220 040A STS	Receive0Read,R2
+(0100)  //Receive0Read&=Receive0BufferWrap; 
+(0101)   Receive0Counter+=n; 
+    0F3A4 9020 0408 LDS	R2,Receive0Counter
+    0F3A6 9030 0409 LDS	R3,Receive0Counter+1
+    0F3A8 0E20      ADD	R2,R16
+    0F3A9 1E31      ADC	R3,R17
+    0F3AA 9230 0409 STS	Receive0Counter+1,R3
+    0F3AC 9220 0408 STS	Receive0Counter,R2
+(0102)   
+(0103)   SEI();
+    0F3AE 9478      BSET	7
+    0F3AF 9508      RET
+(0104) } 
+(0105)  
+(0106) char GetUart0Symbol(void) //25 cycles
+(0107) {char symbol;
+(0108)  symbol=Uart0ReceiveBuffer[Receive0Read++];
+_GetUart0Symbol:
+  symbol               --> R16
+    0F3B0 9020 040A LDS	R2,Receive0Read
+    0F3B2 9030 040B LDS	R3,Receive0Read+1
+    0F3B4 01C1      MOVW	R24,R2
+    0F3B5 9601      ADIW	R24,1
+    0F3B6 9390 040B STS	Receive0Read+1,R25
+    0F3B8 9380 040A STS	Receive0Read,R24
+    0F3BA E08E      LDI	R24,0xE
+    0F3BB E094      LDI	R25,4
+    0F3BC 01F1      MOVW	R30,R2
+    0F3BD 0FE8      ADD	R30,R24
+    0F3BE 1FF9      ADC	R31,R25
+    0F3BF 8100      LD	R16,Z
+(0109)  //Receive0Read&=Receive0BufferWrap; 
+(0110)  CLI(); Receive0Counter--; SEI();
+    0F3C0 94F8      BCLR	7
+    0F3C1 9180 0408 LDS	R24,Receive0Counter
+    0F3C3 9190 0409 LDS	R25,Receive0Counter+1
+    0F3C5 9701      SBIW	R24,1
+    0F3C6 9390 0409 STS	Receive0Counter+1,R25
+    0F3C8 9380 0408 STS	Receive0Counter,R24
+    0F3CA 9478      BSET	7
+(0111) return symbol;
+    0F3CB 9508      RET
+(0112) }
+(0113) 
+(0114) char GetNextUartSym(void)
+(0115) {while(!Receive0Counter) ;
+_GetNextUartSym:
+    0F3CC 9020 0408 LDS	R2,Receive0Counter
+    0F3CE 9030 0409 LDS	R3,Receive0Counter+1
+    0F3D0 2022      TST	R2
+    0F3D1 F411      BNE	0xF3D4
+    0F3D2 2033      TST	R3
+    0F3D3 F3C1      BEQ	0xF3CC
+(0116)  return GetUart0Symbol();
+    0F3D4 CFDB      RJMP	_GetUart0Symbol
+(0117) }
+(0118) 
+(0119) /////////////////////////////////////
+(0120) //UART0 initialize
+(0121) 
+(0122) // char size: 8 bit
+(0123) // parity: Disabled
+(0124) //ubrr=7 115200
+(0125) //ubrr=1 460800
+(0126) //ubrr=0 021600
+(0127) void Uart0Init(void)
+(0128) {UCSR0B = 0x00; //disable while setting baud rate
+_Uart0Init:
+    0F3D5 2422      CLR	R2
+    0F3D6 9220 00C1 STS	0xC1,R2
+(0129)  UCSR0A = 0x00; //x2
+    0F3D8 9220 00C0 STS	0xC0,R2
+(0130)  UCSR0C = 0x06;
+    0F3DA E086      LDI	R24,6
+    0F3DB 9380 00C2 STS	0xC2,R24
+(0131)  
+(0132)  UBRR0 = BaudRate;
+    0F3DD E085      LDI	R24,5
+    0F3DE E090      LDI	R25,0
+    0F3DF 9390 00C5 STS	0xC5,R25
+    0F3E1 9380 00C4 STS	0xC4,R24
+(0133)  /*if(PINB&0x40) UBRR0 = BaudRate;
+(0134)  else		   UBRR0 = 7;  //115200*/
+(0135)  UCSR0B = 0xD8; //RXC + TXC
+(0136) }
+(0137) 
+FILE: <library>
+    0F3E3 ED88      LDI	R24,0xD8
+    0F3E4 9380 00C1 STS	0xC1,R24
+    0F3E6 9508      RET
+pop_xgset003C:
+    0F3E7 90A9      LD	R10,Y+
+    0F3E8 90B9      LD	R11,Y+
+    0F3E9 90C9      LD	R12,Y+
+    0F3EA 90D9      LD	R13,Y+
+    0F3EB 9508      RET
+pop_xgset00FC:
+    0F3EC 90A9      LD	R10,Y+
+    0F3ED 90B9      LD	R11,Y+
+    0F3EE 90C9      LD	R12,Y+
+    0F3EF 90D9      LD	R13,Y+
+    0F3F0 90E9      LD	R14,Y+
+    0F3F1 90F9      LD	R15,Y+
+    0F3F2 9508      RET
+push_xgsetF0FC:
+    0F3F3 937A      ST	-Y,R23
+    0F3F4 936A      ST	-Y,R22
+push_xgset30FC:
+    0F3F5 935A      ST	-Y,R21
+    0F3F6 934A      ST	-Y,R20
+push_xgset00FC:
+    0F3F7 92FA      ST	-Y,R15
+    0F3F8 92EA      ST	-Y,R14
+push_xgset003C:
+    0F3F9 92DA      ST	-Y,R13
+    0F3FA 92CA      ST	-Y,R12
+    0F3FB 92BA      ST	-Y,R11
+    0F3FC 92AA      ST	-Y,R10
+    0F3FD 9508      RET

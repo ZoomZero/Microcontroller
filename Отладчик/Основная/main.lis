@@ -1,0 +1,328 @@
+                        .module main.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile main.c
+                        .area lit(rom, con, rel)
+ 0000           _MyName::
+ 0000 44656275676765723132383420627920  .byte 'D,'e,'b,'u,'g,'g,'e,'r,49,50,56,52,32,'b,'y,32
+ 0010 4976616E00        .byte 'I,'v,'a,'n,0
+ 0015                   .dbfile D:\Тест2021\Отладчик\Основная\main.c
+ 0015                   .dbsym e MyName _MyName A[21:21]kc
+                        .area vector(rom, abs)
+                        .org 72
+ 0048 0C940000          jmp _timer0_ovf_isr
+                        .area lit(rom, con, rel)
+                        .area text(rom, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\main.c
+ 0000                   .dbfunc e timer0_ovf_isr _timer0_ovf_isr fV
+ 0000           ;              p -> R16,R17
+                        .even
+ 0000           _timer0_ovf_isr::
+ 0000 0A93              st -y,R16
+ 0002 1A93              st -y,R17
+ 0004 8A93              st -y,R24
+ 0006 9A93              st -y,R25
+ 0008 EA93              st -y,R30
+ 000A FA93              st -y,R31
+ 000C 0FB7              IN R16,63
+ 000E 0A93              st -y,R16
+ 0010                   .dbline -1
+ 0010                   .dbline 22
+ 0010           ; // Target : ATMega1284P
+ 0010           ; // Crystal: 24Mhz
+ 0010           ; 
+ 0010           ; #include <iom1284pv.h>
+ 0010           ; #include <macros.h>
+ 0010           ; 
+ 0010           ; #include "maintenance.h"
+ 0010           ; #include "tc1.h"
+ 0010           ; #include "Uart0.h"
+ 0010           ; #include "flashaps.h"
+ 0010           ; #include "adc.h"
+ 0010           ; 
+ 0010           ; const char MyName[] = "Debugger1284 by Ivan";
+ 0010           ; 
+ 0010           ; #define Uart0TxC (UCSR0A&0x40)
+ 0010           ; 
+ 0010           ; long Freq, FreqOld;
+ 0010           ; long Frez;
+ 0010           ; 
+ 0010           ; #pragma interrupt_handler timer0_ovf_isr:iv_TIM0_OVF
+ 0010           ; void timer0_ovf_isr(void)
+ 0010           ; {
+ 0010                   .dbline 24
+ 0010           ;  char *p;
+ 0010           ;  p = (char*)Freq+1;
+ 0010 00910800          lds R16,_Freq
+ 0014 10910900          lds R17,_Freq+1
+ 0018 0F5F              subi R16,255  ; offset = 1
+ 001A 1F4F              sbci R17,255
+ 001C                   .dbline 25
+ 001C           ;  *(int*)p+=1;
+ 001C F801              movw R30,R16
+ 001E 8081              ldd R24,z+0
+ 0020 9181              ldd R25,z+1
+ 0022 0196              adiw R24,1
+ 0024 9183              std z+1,R25
+ 0026 8083              std z+0,R24
+ 0028                   .dbline 26
+ 0028           ;  p = (char*)Freq+3;
+ 0028 00910800          lds R16,_Freq
+ 002C 10910900          lds R17,_Freq+1
+ 0030 0D5F              subi R16,253  ; offset = 3
+ 0032 1F4F              sbci R17,255
+ 0034                   .dbline 27
+ 0034           ;  p = 0;
+ 0034 0027              clr R16
+ 0036 1127              clr R17
+ 0038                   .dbline -2
+ 0038           L1:
+ 0038                   .dbline 0 ; func end
+ 0038 0991              ld R16,y+
+ 003A 0FBF              OUT 63,R16
+ 003C F991              ld R31,y+
+ 003E E991              ld R30,y+
+ 0040 9991              ld R25,y+
+ 0042 8991              ld R24,y+
+ 0044 1991              ld R17,y+
+ 0046 0991              ld R16,y+
+ 0048 1895              reti
+ 004A                   .dbsym r p 16 pc
+ 004A                   .dbend
+                        .area vector(rom, abs)
+                        .org 92
+ 005C 0C942500          jmp _ana_comp_isr
+                        .area text(rom, con, rel)
+ 004A                   .dbfile D:\Тест2021\Отладчик\Основная\main.c
+ 004A                   .dbfunc e ana_comp_isr _ana_comp_isr fV
+                        .even
+ 004A           _ana_comp_isr::
+ 004A 2A92              st -y,R2
+ 004C 3A92              st -y,R3
+ 004E 4A92              st -y,R4
+ 0050 5A92              st -y,R5
+ 0052 6A92              st -y,R6
+ 0054 7A92              st -y,R7
+ 0056 8A92              st -y,R8
+ 0058 9A92              st -y,R9
+ 005A 8A93              st -y,R24
+ 005C 9A93              st -y,R25
+ 005E AA93              st -y,R26
+ 0060 BA93              st -y,R27
+ 0062 EA93              st -y,R30
+ 0064 FA93              st -y,R31
+ 0066 2FB6              IN R2,63
+ 0068 2A92              st -y,R2
+ 006A                   .dbline -1
+ 006A                   .dbline 32
+ 006A           ; }
+ 006A           ; 
+ 006A           ; #pragma interrupt_handler ana_comp_isr:iv_ANA_COMP
+ 006A           ; void ana_comp_isr(void)
+ 006A           ; {
+ 006A                   .dbline 33
+ 006A           ;  *(char*)(&Freq)=TCNT0;
+ 006A 26B4              in R2,0x26
+ 006C E0E0              ldi R30,<_Freq
+ 006E F0E0              ldi R31,>_Freq
+ 0070 2082              std z+0,R2
+ 0072                   .dbline 34
+ 0072           ;  Frez=Freq-FreqOld;
+ 0072 40900600          lds R4,_FreqOld+2
+ 0076 50900700          lds R5,_FreqOld+2+1
+ 007A 20900400          lds R2,_FreqOld
+ 007E 30900500          lds R3,_FreqOld+1
+ 0082 80900A00          lds R8,_Freq+2
+ 0086 90900B00          lds R9,_Freq+2+1
+ 008A 60900800          lds R6,_Freq
+ 008E 70900900          lds R7,_Freq+1
+ 0092 6218              sub R6,R2
+ 0094 7308              sbc R7,R3
+ 0096 8408              sbc R8,R4
+ 0098 9508              sbc R9,R5
+ 009A 70920100          sts _Frez+1,R7
+ 009E 60920000          sts _Frez,R6
+ 00A2 90920300          sts _Frez+2+1,R9
+ 00A6 80920200          sts _Frez+2,R8
+ 00AA                   .dbline 35
+ 00AA           ;  if(Frez>0xFFFE) Frez=0xFFFE;
+ 00AA 8EEF              ldi R24,254
+ 00AC 9FEF              ldi R25,255
+ 00AE A0E0              ldi R26,0
+ 00B0 B0E0              ldi R27,0
+ 00B2 8615              cp R24,R6
+ 00B4 9705              cpc R25,R7
+ 00B6 A805              cpc R26,R8
+ 00B8 B905              cpc R27,R9
+ 00BA 5CF4              brge L3
+ 00BC           X0:
+ 00BC                   .dbline 35
+ 00BC 8EEF              ldi R24,254
+ 00BE 80930000          sts _Frez+0,R24
+ 00C2 8FEF              ldi R24,255
+ 00C4 80930100          sts _Frez+1,R24
+ 00C8 80E0              ldi R24,0
+ 00CA 80930200          sts _Frez+2,R24
+ 00CE 80930300          sts _Frez+3,R24
+ 00D2           L3:
+ 00D2                   .dbline 36
+ 00D2           ;  FreqOld = Freq;
+ 00D2 40900A00          lds R4,_Freq+2
+ 00D6 50900B00          lds R5,_Freq+2+1
+ 00DA 20900800          lds R2,_Freq
+ 00DE 30900900          lds R3,_Freq+1
+ 00E2 30920500          sts _FreqOld+1,R3
+ 00E6 20920400          sts _FreqOld,R2
+ 00EA 50920700          sts _FreqOld+2+1,R5
+ 00EE 40920600          sts _FreqOld+2,R4
+ 00F2                   .dbline -2
+ 00F2           L2:
+ 00F2                   .dbline 0 ; func end
+ 00F2 2990              ld R2,y+
+ 00F4 2FBE              OUT 63,R2
+ 00F6 F991              ld R31,y+
+ 00F8 E991              ld R30,y+
+ 00FA B991              ld R27,y+
+ 00FC A991              ld R26,y+
+ 00FE 9991              ld R25,y+
+ 0100 8991              ld R24,y+
+ 0102 9990              ld R9,y+
+ 0104 8990              ld R8,y+
+ 0106 7990              ld R7,y+
+ 0108 6990              ld R6,y+
+ 010A 5990              ld R5,y+
+ 010C 4990              ld R4,y+
+ 010E 3990              ld R3,y+
+ 0110 2990              ld R2,y+
+ 0112 1895              reti
+ 0114                   .dbend
+ 0114                   .dbfunc e comparator_init _comparator_init fV
+                        .even
+ 0114           _comparator_init::
+ 0114                   .dbline -1
+ 0114                   .dbline 41
+ 0114           ;  
+ 0114           ; }
+ 0114           ; 
+ 0114           ; void comparator_init(void)
+ 0114           ; {
+ 0114                   .dbline 42
+ 0114           ;  ACSR = ACSR & 0xF7; //ensure interrupt is off before changing
+ 0114 80B7              in R24,0x30
+ 0116 877F              andi R24,247
+ 0118 80BF              out 0x30,R24
+ 011A                   .dbline 43
+ 011A           ;  ACSR = 0x0F;
+ 011A 8FE0              ldi R24,15
+ 011C 80BF              out 0x30,R24
+ 011E                   .dbline -2
+ 011E           L5:
+ 011E                   .dbline 0 ; func end
+ 011E 0895              ret
+ 0120                   .dbend
+ 0120                   .dbfunc e timer0_init _timer0_init fV
+                        .even
+ 0120           _timer0_init::
+ 0120                   .dbline -1
+ 0120                   .dbline 47
+ 0120           ; }
+ 0120           ; 
+ 0120           ; void timer0_init(void)
+ 0120           ; {
+ 0120                   .dbline 48
+ 0120           ;  TCCR0B = 0x00; //stop
+ 0120 2224              clr R2
+ 0122 25BC              out 0x25,R2
+ 0124                   .dbline 49
+ 0124           ;  TCNT0 = 0x00 /*INVALID SETTING*/; //set count
+ 0124 26BC              out 0x26,R2
+ 0126                   .dbline 50
+ 0126           ;  OCR0A  = 0x00 /*INVALID SETTING*/;
+ 0126 27BC              out 0x27,R2
+ 0128                   .dbline 51
+ 0128           ;  TCCR0A = 0x00; //start timer
+ 0128 24BC              out 0x24,R2
+ 012A                   .dbline 52
+ 012A           ;  TCCR0B = 0x04; //start timer
+ 012A 84E0              ldi R24,4
+ 012C 85BD              out 0x25,R24
+ 012E                   .dbline 53
+ 012E           ;  TIMSK0 = 0x01; //timer0 interrupt sources
+ 012E 81E0              ldi R24,1
+ 0130 80936E00          sts 110,R24
+ 0134                   .dbline -2
+ 0134           L6:
+ 0134                   .dbline 0 ; func end
+ 0134 0895              ret
+ 0136                   .dbend
+ 0136                   .dbfunc e main _main fV
+                        .even
+ 0136           _main::
+ 0136                   .dbline -1
+ 0136                   .dbline 57
+ 0136           ; }
+ 0136           ; 
+ 0136           ; void main(void)
+ 0136           ; {
+ 0136                   .dbline 59
+ 0136           ;  //CallLoaderL(ArBuf);
+ 0136           ;  DDRA = 0; //port to enter
+ 0136 2224              clr R2
+ 0138 21B8              out 0x1,R2
+ 013A                   .dbline 60
+ 013A           ;  Uart0Init();
+ 013A 0E940000          xcall _Uart0Init
+ 013E                   .dbline 61
+ 013E           ;  timer0_init();
+ 013E F0DF              xcall _timer0_init
+ 0140                   .dbline 62
+ 0140           ;  comparator_init();
+ 0140 E9DF              xcall _comparator_init
+ 0142                   .dbline 63
+ 0142           ;  adc_init();
+ 0142 0E940000          xcall _adc_init
+ 0146 07C0              xjmp L9
+ 0148           L8:
+ 0148                   .dbline 68
+ 0148           ;  //InitTimer1();
+ 0148           ;  //FlashToUart0(MyName);
+ 0148           ;  //CLI();
+ 0148           ;  while(1)
+ 0148           ;  {
+ 0148                   .dbline 70
+ 0148           ;   //if (Tc1Flag) break;
+ 0148           ;   if (GetUart0Counter() > 3) CommandDc(); 
+ 0148 0E940000          xcall _GetUart0Counter
+ 014C 83E0              ldi R24,3
+ 014E 8017              cp R24,R16
+ 0150 10F4              brsh L11
+ 0152           X1:
+ 0152                   .dbline 70
+ 0152 0E940000          xcall _CommandDc
+ 0156           L11:
+ 0156                   .dbline 71
+ 0156           ;  }
+ 0156           L9:
+ 0156                   .dbline 67
+ 0156 F8CF              xjmp L8
+ 0158           X2:
+ 0158                   .dbline -2
+ 0158           L7:
+ 0158                   .dbline 0 ; func end
+ 0158 0895              ret
+ 015A                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile D:\Тест2021\Отладчик\Основная\main.c
+ 0000           _Frez::
+ 0000                   .blkb 4
+ 0004                   .dbsym e Frez _Frez L
+ 0004           _FreqOld::
+ 0004                   .blkb 4
+ 0008                   .dbsym e FreqOld _FreqOld L
+ 0008           _Freq::
+ 0008                   .blkb 4
+ 000C                   .dbsym e Freq _Freq L
+ 000C           ;  //T = 400000L;
+ 000C           ;  //while (--T) ;
+ 000C           ;  asm("jmp 0x1E000");
+ 000C           ;  //StringToUart0("TxComplete");
+ 000C           ; }

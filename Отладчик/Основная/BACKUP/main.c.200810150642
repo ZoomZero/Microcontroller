@@ -1,0 +1,30 @@
+// Target : ATMega1284P
+// Crystal: 24Mhz
+
+#include <iom1284pv.h>
+#include <macros.h>
+#include "tc1.h"
+
+#include "Uart0.h"
+
+const char MyName[] = "Debugger1284 by Ivan";
+
+#define Uart0TxC (UCSR0A&0x40)
+
+long T;
+
+void main(void)
+{
+ Uart0Init();
+ InitTimer1();
+ FlashToUart0(MyName);
+ //CLI();
+ while(1)
+ {
+  if (Tc1Flag) break;
+ }
+ //T = 400000L;
+ //while (--T) ;
+ asm("jmp 0x1E000");
+ //StringToUart0("TxComplete");
+}

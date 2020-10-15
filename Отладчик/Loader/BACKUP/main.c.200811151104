@@ -1,0 +1,42 @@
+// Target : ATMega1284P
+// Crystal: 24Mhz
+
+#include <iom1284pv.h>
+#include <macros.h>
+
+#include "Uart0.h"
+#include "flash.h"
+
+#define Uart0TxC (UCSR0A&0x40)
+
+#pragma global_register BufAdr:20
+int BufAdr;
+
+
+void LoaderL(void)
+{
+}
+
+void LoaderH(void)
+{
+}
+
+
+asm(".area vector (abs)");
+asm(".org 4");
+asm("jmp LoaderL");
+asm("jmp LoaderH");
+asm(".area text");
+
+void main(void)
+{
+ Uart0Init();
+ FlashToUart0(Name);
+ FlashToUart0(Vers);
+ while(1)
+ {
+
+ }
+ //asm("jmp 0x1E000");
+ //StringToUart0("TxComplete");
+}

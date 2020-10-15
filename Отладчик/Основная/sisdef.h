@@ -1,0 +1,4 @@
+#define Crystall 24000000L
+#define Rate 250000L
+#define BaudRate Crystall / 16 / Rate - 1
+

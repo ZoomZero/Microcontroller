@@ -1,0 +1,7 @@
+void main()
+{
+ Uart0Init();
+ while(1)
+ {
+ }
+}

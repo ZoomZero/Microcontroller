@@ -1,0 +1,56 @@
+#include <iom1284pv.h>
+#include <macros.h>
+
+#include "tc1.h"
+#include "Uart0.h"
+#include "flashaps.h"
+
+#pragma global_register BufAdr:20
+int BufAdr;
+
+void CallLoaderL(void)
+{
+ char *p;
+ int bytes;
+ ArBuf[0] = (long)ArBuf;
+ BufAdr = (int)ArBuf;
+ p = (char*)ArBuf;
+ while (GetUart0Counter() < 2) ; 
+ p[2] = GetUart0Symbol(); //number of pages
+ p[3] = GetUart0Symbol(); //start page number
+ /*bytes = p[2]<<8;
+ p+=4;
+ while (bytes--)
+ {
+  while (!GetUart0Counter()) ;
+  *p++ = GetUart0Symbol();
+ }*/
+ 
+ StringToUart0("LDL");
+ bytes=0;
+ while(--bytes);
+ asm("call 0x1E004");
+}
+
+void MayBeLoad(void)
+{
+ if (GetUart0Symbol() != 'O') return;
+ if (GetUart0Symbol() != 'A') return;
+ switch (GetUart0Symbol())
+ 	{
+ 		case 'L': CallLoaderL(); break;
+		//case 'H': CallLoaderH(); break;
+	} 
+}
+
+void CommandDc(void)
+{
+ switch (GetUart0Symbol())
+ {
+  		case 'L': MayBeLoad(); break;
+		case 'P': break;
+		case 'A': break;
+		case 'R': break;
+		default: return;
+ } 	
+}

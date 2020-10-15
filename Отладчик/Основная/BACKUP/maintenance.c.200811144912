@@ -1,0 +1,37 @@
+#include <iom1284pv.h>
+#include <macros.h>
+
+#include "tc1.h"
+#include "Uart0.h"
+#include "flashaps.h"
+
+void CallLoaderL(void)
+{
+ char *p;
+ ArBuf[0] = ArBuf;
+ p = (char*)ArBuf;
+ while (GetUart0Counter < 2) ; 
+}
+
+void MayBeLoad(char s)
+{
+ if (GetUart0Symbol() != 'o') return;
+ if (GetUart0Symbol() != 'a') return;
+ switch (GetUart0Symbol())
+ 	{
+ 		case 'L': CallLoaderL(); break;
+		//case 'H': CallLoaderH(); break;
+	} 
+}
+
+void CommandDc(void)
+{
+ switch (GetUart0Symbol())
+ {
+  		case 'L': MayBeLoad(GetUart0Symbol()); break;
+		case 'P': break;
+		case 'A': break;
+		case 'R': break;
+		default: return;
+ } 	
+}
